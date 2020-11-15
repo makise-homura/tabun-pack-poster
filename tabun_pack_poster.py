@@ -49,6 +49,14 @@ tmpl_alttext = '__DESC__'
 tmpl_spoiler_contents = """♫ ___
 <a href="__PIC__" target="_blank">__FULL__</a>"""
 
+# Default values for placeholders
+defaults = {
+    'description':''
+    'name':'Без названия'
+    'uploader':'неизвестный автор'
+    'source_url':'неизвестен'
+}
+
 # Pics for spoiler headers (like those you see in Celestia and Luna packs):
 # use None or empty array for generic text spoilers
 # or an array of tabun-hosted pics URLs, like this:
@@ -81,11 +89,11 @@ except ImportError as e:
     sys.exit(1)
 
 # A function to replace placeholders in picture block
-def db_replace(string, picture, mirror):
-    string = string.replace('__DESC__', picture['description'] if picture['description'] != None else '')
-    string = string.replace('__NAME__', picture['name'] if picture['name'] != None else '')
-    string = string.replace('__UPLOADER__', picture['uploader'] if picture['uploader'] != None else '')
-    string = string.replace('__SOURCE__', picture['source_url'] if picture['source_url'] != None else '')
+def db_replace(string, picture, mirror, defaults):
+    string = string.replace('__DESC__', picture['description'] if picture['description'] != None else defaults['description'])
+    string = string.replace('__NAME__', picture['name'] if picture['name'] != None else defaults['name'])
+    string = string.replace('__UPLOADER__', picture['uploader'] if picture['uploader'] != None else defaults['uploader'])
+    string = string.replace('__SOURCE__', picture['source_url'] if picture['source_url'] != None else defaults['source_url'])
     string = string.replace('__ID__', str(picture['id']))
     string = string.replace('__DB_URL__', mirror + '/images/' + str(picture['id']))
     return string
