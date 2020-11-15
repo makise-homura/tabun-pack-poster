@@ -109,7 +109,8 @@ for picture in json['images']:
     desc = picture['description'].replace('\r\n', ' ')
     if len(desc) > 50:
         desc = desc[0:50] + '(...)'
-    print('Uploading [' + str(current_pic) + '/' + str(total) + ']:', desc)
+    progress = "OP picture" if current_pic == 0 else '[' + str(current_pic) + '/' + str(total - 1) + ']'
+    print('Uploading ' + progress + ':', desc)
     link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
     try:
         img_link = tabun.upload_image_link(link_rep, title=picture['description'], parse_link=False)
