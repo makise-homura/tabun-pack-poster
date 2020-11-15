@@ -20,7 +20,7 @@ blog_id = 0 # integer ID or string from URL; 0 = your personal blog
 
 # Tags to search on Derpibooru
 pony = 'lyra heartstrings'
-also = ', safe, -webm' # May be empty; otherwise first comma is mandatory
+also = 'safe, -webm' # May be empty; otherwise first comma is mandatory
 
 # Post template (__OP_PIC__ and __PIC_BLOCK__ are placeholders)
 tmpl_body = """
@@ -73,6 +73,9 @@ except ImportError as e:
 
 # First, get pictures from Derpibooru
 date = datetime.date.today() - datetime.timedelta(days=period)
+also = also.strip()
+if also[0] != ',':
+    also = ', ' + also
 dbtags = pony + also + ', created_at.gte:' + date.strftime('%Y-%m-%d') + timezone
 params = [('sf', 'score'), ('per_page', piclimit + 1), ('q', dbtags)]
 proxies = {} if proxy == '' else {'https': proxy}
