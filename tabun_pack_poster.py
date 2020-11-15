@@ -58,14 +58,18 @@ piclimit = 15 # How many pictures to retrieve (not including OP pic, max 49)
 
 ##############################################################################
 
-# Install Tabun API, if you don't have one:
-# pip install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]
-
-import tabun_api
+import sys
 import datetime
 import json
 import requests
 from pathlib import Path
+
+# tabun_api might be missing, so let user know about it
+try:
+    import tabun_api
+except ImportError as e:
+    print('Install Tabun API: pip install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]')
+    sys.exit(1)
 
 # First, get pictures from Derpibooru
 date = datetime.date.today() - datetime.timedelta(days=period)
@@ -77,12 +81,12 @@ try:
     response = requests.get(mirror + '/api/v1/json/search/images', params=params, proxies=proxies)
 except requests.exceptions.RequestException as e:
     print('HTTPS request error:', e)
-    raise SystemExit(e)
+    sys.exit(2)
 try:
     json = response.json();
 except json.JSONDecodeError as e:
     print('JSON decode error:', e)
-    raise SystemExit(e)
+    sys.exit(3)
 total = len(json['images'])
 print('Retrieved', total, 'images of', str(json['total']) + '.')
 
@@ -130,7 +134,7 @@ try:
     blog, post_id = tabun.add_post(blog_id, title, body, tags, forbid_comment=False, draft=True)
 except tabun_api.TabunError as e:
     print('Tabun error:', e)
-    raise SystemExit(e)
+    sys.exit(10)
 
 print('New post added successfully! Link: https://tabun.everypony.ru/blog/' + str(post_id) + '.html')
 # If you forgot a link, you may find it here: https://tabun.everypony.ru/topic/saved/
