@@ -20,7 +20,7 @@ blog_id = 0 # integer ID or string from URL; 0 = your personal blog
 
 # Tags to sort and search on Derpibooru
 pony = 'lyra heartstrings'
-also = 'safe, -webm, -exploitable meme, -meme, -irl, -comic, -screencap, -meta, -text only)'
+also = 'safe, -webm, -exploitable meme, -meme, -irl, -comic, -screencap, -meta, -text only'
 sort = 'wilson_score' # 'score' looks like not so suitable
 
 # Post template (__OP_PIC__ and __PIC_BLOCK__ are placeholders)
@@ -31,13 +31,21 @@ __PIC_BLOCK__
 Да пребудет с вами Лира!
 """
 
-# Other templates (text-/pic-spoiler header, OP picture, spoiler contents)
-# ___ : a placeholder for spoiler number,
-# __PIC__ : a placeholder for URL of spoilerpic or resized picture
-# __FULL__ : a placeholder for <img> tag of full-resolution picture
+# Other templates
+# Placeholders regognized:
+# ___ : spoiler number (not in op_pic),
+# __PIC__ : URL of spoilerpic or resized picture (not in text_spoiler_header)
+# __FULL__ : <img> tag of full-resolution picture (not in *_spoiler_header)
+# __DESC__ : Derpibooru picture description
+# __NAME__ : Derpibooru picture name
+# __UPLOADER__ : Derpibooru picture uploader
+# __SOURCE__ : Derpibooru picture source URL
+# __ID__ : Derpibooru picture ID
+# __DB_URL__ : Derpibooru URL of picture page
 tmpl_text_spoiler_header = 'Спойлер (___)'
 tmpl_pic_spoiler_header = '<img src = "__PIC__" >'
 tmpl_op_pic = '<a href="__PIC__" target="_blank">__FULL__</a>'
+tmpl_alttext = '__DESC__'
 tmpl_spoiler_contents = """♫ ___
 <a href="__PIC__" target="_blank">__FULL__</a>"""
 
@@ -71,6 +79,16 @@ try:
 except ImportError as e:
     print('Install Tabun API: pip install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]')
     sys.exit(1)
+
+# A function to replace placeholders in picture block
+def db_replace(string, picture, mirror):
+    string = string.replace('__DESC__', picture['description'] if picture['description'] != None else '')
+    string = string.replace('__NAME__', picture['name'] if picture['name'] != None else '')
+    string = string.replace('__UPLOADER__', picture['uploader'] if picture['uploader'] != None else '')
+    string = string.replace('__SOURCE__', picture['source_url'] if picture['source_url'] != None else '')
+    string = string.replace('__ID__', str(picture['id']))
+    string = string.replace('__DB_URL__', mirror + '/images/' + str(picture['id']))
+    return string
 
 # First, get pictures from Derpibooru
 date = datetime.date.today() - datetime.timedelta(days=period)
@@ -110,16 +128,18 @@ for picture in json['images']:
     if len(desc) > 50:
         desc = desc[0:50] + '(...)'
     progress = "OP picture" if current_pic == 0 else '[' + str(current_pic) + '/' + str(total - 1) + ']'
-    print('Uploading ' + progress + ':', desc)
+    print('Uploading ' + progress + ' (' + mirror + '/images/' + str(picture['id']) + '):', desc)
     link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
     try:
-        img_link = tabun.upload_image_link(link_rep, title=picture['description'], parse_link=False)
+        alttext = db_replace(tmpl_alttext, picture, mirror)
+        img_link = tabun.upload_image_link(link_rep, title=alttext, parse_link=False)
         img_url = tabun.upload_image_link(picture['representations']['full'], parse_link=True)
     except tabun_api.TabunError as e:
         print('Tabun upload error:', e)
         sys.exit(5)
     if current_pic == 0:
         op_pic = tmpl_op_pic.replace('__PIC__', img_url).replace('__FULL__', img_link)
+        op_pic = db_replace(op_pic, picture, mirror)
     else:
         if spoilerpics == None or len(spoilerpics) < current_pic:
             spoiler_header = tmpl_text_spoiler_header
@@ -128,6 +148,7 @@ for picture in json['images']:
         spoiler_header = spoiler_header.replace('___', str(current_pic))
         spoiler_contents = tmpl_spoiler_contents.replace('__PIC__', img_url).replace('__FULL__', img_link).replace('___', str(current_pic))
         pic_block += '<span class="spoiler"><span class="spoiler-title">' + spoiler_header + '</span><span class="spoiler-body">' + spoiler_contents + '</span></span>'
+        pic_block = db_replace(pic_block, picture, mirror)
     current_pic += 1
 body = tmpl_body.replace('__OP_PIC__', op_pic).replace('__PIC_BLOCK__', pic_block)
 
