@@ -18,9 +18,10 @@ title = 'Пак имени лучшей музыкальной пони №___'
 tags = ['Лира Харстрингс', 'пак', 'картинки']
 blog_id = 0 # integer ID or string from URL; 0 = your personal blog
 
-# Tags to search on Derpibooru
+# Tags to sort and search on Derpibooru
 pony = 'lyra heartstrings'
-also = 'safe, -webm' # May be empty; otherwise first comma is mandatory
+also = 'safe, -webm, -exploitable meme, -meme, -irl, -comic, -screencap, -meta, -text only)'
+sort = 'wilson_score' # 'score' looks like not so suitable
 
 # Post template (__OP_PIC__ and __PIC_BLOCK__ are placeholders)
 tmpl_body = """
@@ -77,7 +78,7 @@ also = also.strip()
 if also[0] != ',':
     also = ', ' + also
 dbtags = pony + also + ', created_at.gte:' + date.strftime('%Y-%m-%d') + timezone
-params = [('sf', 'score'), ('per_page', piclimit + 1), ('q', dbtags)]
+params = [('sf', sort), ('per_page', piclimit + 1), ('q', dbtags)]
 proxies = {} if proxy == '' else {'https': proxy}
 print('Retrieving from derpibooru by tags:', dbtags)
 try:
