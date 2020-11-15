@@ -51,10 +51,10 @@ tmpl_spoiler_contents = """♫ ___
 
 # Default values for placeholders
 defaults = {
-    'description':''
-    'name':'Без названия'
-    'uploader':'неизвестный автор'
-    'source_url':'неизвестен'
+    'description':'',
+    'name':'Без названия',
+    'uploader':'неизвестный автор',
+    'source_url':'неизвестен',
 }
 
 # Pics for spoiler headers (like those you see in Celestia and Luna packs):
@@ -139,7 +139,7 @@ for picture in json['images']:
     print('Uploading ' + progress + ' (' + mirror + '/images/' + str(picture['id']) + '):', desc)
     link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
     try:
-        alttext = db_replace(tmpl_alttext, picture, mirror)
+        alttext = db_replace(tmpl_alttext, picture, mirror, defaults)
         img_link = tabun.upload_image_link(link_rep, title=alttext, parse_link=False)
         img_url = tabun.upload_image_link(picture['representations']['full'], parse_link=True)
     except tabun_api.TabunError as e:
@@ -147,7 +147,7 @@ for picture in json['images']:
         sys.exit(5)
     if current_pic == 0:
         op_pic = tmpl_op_pic.replace('__PIC__', img_url).replace('__FULL__', img_link)
-        op_pic = db_replace(op_pic, picture, mirror)
+        op_pic = db_replace(op_pic, picture, mirror, defaults)
     else:
         if spoilerpics == None or len(spoilerpics) < current_pic:
             spoiler_header = tmpl_text_spoiler_header
@@ -156,7 +156,7 @@ for picture in json['images']:
         spoiler_header = spoiler_header.replace('___', str(current_pic))
         spoiler_contents = tmpl_spoiler_contents.replace('__PIC__', img_url).replace('__FULL__', img_link).replace('___', str(current_pic))
         pic_block += '<span class="spoiler"><span class="spoiler-title">' + spoiler_header + '</span><span class="spoiler-body">' + spoiler_contents + '</span></span>'
-        pic_block = db_replace(pic_block, picture, mirror)
+        pic_block = db_replace(pic_block, picture, mirror, defaults)
     current_pic += 1
 body = tmpl_body.replace('__OP_PIC__', op_pic).replace('__PIC_BLOCK__', pic_block)
 
