@@ -16,7 +16,7 @@ mirror = 'https://www.trixiebooru.org' # the only available in RU w/o proxy
 # Post properties (use three underscores to substitute pack number in title)
 title = 'Пак имени лучшей музыкальной пони №___'
 tags = ['Лира Харстрингс', 'пак', 'картинки']
-blog_id = 0 # 0 = your personal blog
+blog_id = 0 # integer ID or string from URL; 0 = your personal blog
 
 # Tags to search on Derpibooru
 pony = 'lyra heartstrings'
@@ -138,10 +138,16 @@ title = title.replace('___', str(pack_number))
 
 # Add a post!
 print('Adding a draft post:', title)
+if type(blog_id) == str:
+    try:
+        blog_id = tabun.get_blog(blog_id).blog_id
+    except tabun_api.TabunError as e:
+        print('Tabun blog search error:', e)
+        sys.exit(9)
 try:
     blog, post_id = tabun.add_post(blog_id, title, body, tags, forbid_comment=False, draft=True)
 except tabun_api.TabunError as e:
-    print('Tabun error:', e)
+    print('Tabun posting error:', e)
     sys.exit(10)
 
 print('New post added successfully! Link: https://tabun.everypony.ru/blog/' + str(post_id) + '.html')
