@@ -48,6 +48,9 @@ tmpl_op_pic = '<a href="__PIC__" target="_blank">__FULL__</a>'
 tmpl_alttext = '__DESC__'
 tmpl_spoiler_contents = """♫ ___
 <a href="__PIC__" target="_blank">__FULL__</a>"""
+# Example: If you wish to link picture preview to derpibooru page
+# instead of pic fullsize, replace __PIC__ with __DB_URL__
+# in tmpl_spoiler_contents and tmpl_op_pic.
 
 # Default values for placeholders
 defaults = {
