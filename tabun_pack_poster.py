@@ -23,21 +23,32 @@ pony = 'lyra heartstrings'
 also = ', safe, -webm' # May be empty; otherwise first comma is mandatory
 
 # Post template (__OP_PIC__ and __PIC_BLOCK__ are placeholders)
-body = """
+tmpl_body = """
 __OP_PIC__
 <cut name="Больше мятности и музыкальности! →">
 __PIC_BLOCK__
 Да пребудет с вами Лира!
 """
 
-# Pics for spoilers (like those you see in Celestia and Luna packs)
-spoilerpics = None # use None for generic text spoilers
-# Or array of tabun-hosted pics URLs (no less than `piclimit`), like this:
-# spoilerpics = [
+# Other templates (text-/pic-spoiler header, OP picture, spoiler contents)
+# ___ : a placeholder for spoiler number,
+# __PIC__ : a placeholder for URL of spoilerpic or resized picture
+# __FULL__ : a placeholder for <img> tag of full-resolution picture
+tmpl_text_spoiler_header = 'Спойлер (___)'
+tmpl_pic_spoiler_header = '<img src = "__PIC__" >'
+tmpl_op_pic = '<a href="__PIC__" target="_blank">__FULL__</a>'
+tmpl_spoiler_contents = """♫ ___
+<a href="__PIC__" target="_blank">__FULL__</a>"""
+
+# Pics for spoiler headers (like those you see in Celestia and Luna packs):
+# use None or empty array for generic text spoilers
+# or an array of tabun-hosted pics URLs, like this:
+spoilerpics = [
 #     'https://cdn.everypony.ru/storage/06/15/73/2020/09/15/b415d211d9.png',
 #     'https://cdn.everypony.ru/storage/06/15/73/2020/09/15/ab1e77be91.png',
 #     'https://cdn.everypony.ru/storage/06/15/73/2020/09/15/d0d39e2e1d.png',
-# ]
+]
+# If less items than piclimit, remaining spoilers will be text ones
 
 # Other config
 timezone = '+03:00' # Timezone for searching images on Derpibooru
@@ -91,15 +102,17 @@ for picture in json['images']:
     img_link = tabun.upload_image_link(link_rep, title=picture['description'], parse_link=False)
     img_url = tabun.upload_image_link(picture['representations']['full'], parse_link=True)
     if current_pic == 0:
-        op_pic = '<a href="' + img_url + '" target="_blank">' +img_link + '</a></span></span>'
+        op_pic = tmpl_op_pic.replace('__PIC__', img_url).replace('__FULL__', img_link)
     else:
-        if spoilerpics == None:
-            spoilerpic = 'Спойлер ' + str(current_pic)
+        if spoilerpics == None or len(spoilerpics) < current_pic:
+            spoiler_header = tmpl_text_spoiler_header
         else:
-            spoilerpic = '<img src = "' + spoilerpics[current_pic - 1] + '" >'
-        pic_block += '<span class="spoiler"><span class="spoiler-title">' + spoilerpic + '</span><span class="spoiler-body"><a href="' + img_url + '" target="_blank">' +img_link + '</a></span></span>'
+            spoiler_header = tmpl_pic_spoiler_header.replace('__PIC__', spoilerpics[current_pic - 1])
+        spoiler_header = spoiler_header.replace('___', str(current_pic))
+        spoiler_contents = tmpl_spoiler_contents.replace('__PIC__', img_url).replace('__FULL__', img_link).replace('___', str(current_pic))
+        pic_block += '<span class="spoiler"><span class="spoiler-title">' + spoiler_header + '</span><span class="spoiler-body">' + spoiler_contents + '</span></span>'
     current_pic += 1
-body = body.replace('__OP_PIC__', op_pic).replace('__PIC_BLOCK__', pic_block)
+body = tmpl_body.replace('__OP_PIC__', op_pic).replace('__PIC_BLOCK__', pic_block)
 
 # Check pack number and set title
 configfile = Path(str(Path.home()) + '/' + config)
