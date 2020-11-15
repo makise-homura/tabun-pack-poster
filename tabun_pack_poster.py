@@ -92,7 +92,11 @@ print('Retrieved', total, 'images of', str(json['total']) + '.')
 
 # Login to Tabun
 print('Logging in...')
-tabun = tabun_api.User(login=username, passwd=password, proxy=proxy);
+try:
+    tabun = tabun_api.User(login=username, passwd=password, proxy=proxy);
+except tabun_api.TabunResultError as e:
+    print('Tabun login error:', e)
+    sys.exit(4)
 
 # Upload pictures and put links into a template body
 current_pic = 0
@@ -103,8 +107,12 @@ for picture in json['images']:
         desc = desc[0:50] + '(...)'
     print('Uploading [' + str(current_pic) + '/' + str(total) + ']:', desc)
     link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
-    img_link = tabun.upload_image_link(link_rep, title=picture['description'], parse_link=False)
-    img_url = tabun.upload_image_link(picture['representations']['full'], parse_link=True)
+    try:
+        img_link = tabun.upload_image_link(link_rep, title=picture['description'], parse_link=False)
+        img_url = tabun.upload_image_link(picture['representations']['full'], parse_link=True)
+    except tabun_api.TabunError as e:
+        print('Tabun upload error:', e)
+        sys.exit(5)
     if current_pic == 0:
         op_pic = tmpl_op_pic.replace('__PIC__', img_url).replace('__FULL__', img_link)
     else:
