@@ -24,6 +24,7 @@ also = 'safe, -webm, -exploitable meme, -meme, -irl, -comic, -screencap, -meta, 
 sort = 'wilson_score' # 'score' looks like not so suitable
 
 # Post template (__OP_PIC__ and __PIC_BLOCK__ are placeholders)
+# ___ will also be changed to pack number, as in title
 tmpl_body = """
 __OP_PIC__
 <cut name="Больше мятности и музыкальности! →">
@@ -163,7 +164,7 @@ for picture in json['images']:
     current_pic += 1
 body = tmpl_body.replace('__OP_PIC__', op_pic).replace('__PIC_BLOCK__', pic_block)
 
-# Check pack number and set title
+# Check pack number and set title and body placeholders
 configfile = Path(str(Path.home()) + '/' + config)
 if configfile.is_file():
     pack_number = int(configfile.read_text()) + 1
@@ -172,6 +173,7 @@ else:
     pack_number = 1
 configfile.write_text(str(pack_number))
 title = title.replace('___', str(pack_number))
+body = body.replace('___', str(pack_number))
 
 # Add a post!
 print('Adding a draft post:', title)
