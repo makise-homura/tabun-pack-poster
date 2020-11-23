@@ -15,8 +15,8 @@ mirror = 'https://www.trixiebooru.org' # the only available in RU w/o proxy
 
 # Post properties (use three underscores to substitute pack number in title)
 title = 'Пак имени лучшей музыкальной пони №___'
-tags = ['Лира Харстрингс', 'пак', 'картинки']
-blog_id = 0 # integer ID or string from URL; 0 = your personal blog
+tags = ['Лира Харстрингс', 'Лира', 'Lyra Heartstrings', 'Lyra', 'пак', 'картинки']
+blog_id = 'Heartstrings' # integer ID or string from URL; 0 = your personal blog
 
 # Tags to sort and search on Derpibooru
 pony = 'lyra heartstrings'
@@ -26,6 +26,7 @@ sort = 'wilson_score' # 'score' looks like not so suitable
 # Post template (__OP_PIC__ and __PIC_BLOCK__ are placeholders)
 # ___ will also be changed to pack number, as in title
 tmpl_body = """
+Пришло время для ___-го пака имени Лиры Харстрингс.
 __OP_PIC__
 <cut name="Больше мятности и музыкальности! →">
 __PIC_BLOCK__
@@ -43,11 +44,11 @@ __PIC_BLOCK__
 # __SOURCE__ : Derpibooru picture source URL
 # __ID__ : Derpibooru picture ID
 # __DB_URL__ : Derpibooru URL of picture page
-tmpl_text_spoiler_header = 'Спойлер (___)'
+tmpl_text_spoiler_header = 'Спойлер ___'
 tmpl_pic_spoiler_header = '<img src = "__PIC__" >'
 tmpl_op_pic = '<a href="__PIC__" target="_blank">__FULL__</a>'
 tmpl_alttext = '__DESC__'
-tmpl_spoiler_contents = """♫ ___
+tmpl_spoiler_contents = """♫ <a href="__DB_URL__" target="_blank">___</a>
 <a href="__PIC__" target="_blank">__FULL__</a>"""
 # Example: If you wish to link picture preview to derpibooru page
 # instead of pic fullsize, replace __PIC__ with __DB_URL__
@@ -65,9 +66,16 @@ defaults = {
 # use None or empty array for generic text spoilers
 # or an array of tabun-hosted pics URLs, like this:
 spoilerpics = [
-#     'https://cdn.everypony.ru/storage/06/15/73/2020/09/15/b415d211d9.png',
-#     'https://cdn.everypony.ru/storage/06/15/73/2020/09/15/ab1e77be91.png',
-#     'https://cdn.everypony.ru/storage/06/15/73/2020/09/15/d0d39e2e1d.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/a784622ba4.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/8c7b62a1e9.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/51a0ceb200.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/1451bf0db5.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/27f426ebe2.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/cbf5de99a4.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/c26d9e76e1.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/a198701934.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/de350c0e28.png',
+#    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/72f506e5df.png',
 ]
 # If less items than piclimit, remaining spoilers will be text ones
 
