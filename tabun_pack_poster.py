@@ -20,6 +20,7 @@ blog_id = 'Heartstrings' # integer ID or string from URL; 0 = your personal blog
 
 # Tags to sort and search on Derpibooru
 pony = 'lyra heartstrings'
+bonuspony = 'bon-bon'
 also = 'safe, -webm, -exploitable meme, -meme, -irl, -comic, -screencap, -meta, -text only'
 sort = 'wilson_score' # 'score' looks like not so suitable
 
@@ -36,7 +37,7 @@ __PIC_BLOCK__
 # Other templates
 # Placeholders regognized:
 # ___ : spoiler number (not in op_pic),
-# __PIC__ : URL of spoilerpic or resized picture (not in text_spoiler_header)
+# __PIC__ : URL of spoilerpic/resized picture (not in text_spoiler_header_*)
 # __FULL__ : <img> tag of full-resolution picture (not in *_spoiler_header)
 # __DESC__ : Derpibooru picture description
 # __NAME__ : Derpibooru picture name
@@ -45,14 +46,18 @@ __PIC_BLOCK__
 # __ID__ : Derpibooru picture ID
 # __DB_URL__ : Derpibooru URL of picture page
 tmpl_text_spoiler_header = 'Спойлер ___'
+tmpl_text_spoiler_header_bonus = 'Бонус'
 tmpl_pic_spoiler_header = '<img src = "__PIC__" >'
+tmpl_pic_spoiler_header_bonus = '<img src = "__PIC__" >'
 tmpl_op_pic = '<a href="__PIC__" target="_blank">__FULL__</a>'
 tmpl_alttext = '__DESC__'
-tmpl_spoiler_contents = """♫ <a href="__DB_URL__" target="_blank">___</a>
+tmpl_spoiler_contents = """№ <a href="__DB_URL__" target="_blank">___</a>
+<a href="__PIC__" target="_blank">__FULL__</a>"""
+tmpl_spoiler_contents_bonus = """<a href="__DB_URL__" target="_blank">***</a>
 <a href="__PIC__" target="_blank">__FULL__</a>"""
 # Example: If you wish to link picture preview to derpibooru page
 # instead of pic fullsize, replace __PIC__ with __DB_URL__
-# in tmpl_spoiler_contents and tmpl_op_pic.
+# in tmpl_spoiler_contents, tmpl_spoiler_contents_bonus, and tmpl_op_pic.
 
 # Default values for placeholders
 defaults = {
@@ -79,11 +84,15 @@ spoilerpics = [
 ]
 # If less items than piclimit, remaining spoilers will be text ones
 
+# Pic for bonus block (None or '' for no picture)
+bonuspic = '' # 'https://cdn.everypony.ru/storage/06/08/97/2020/11/24/21df10c0b9.png'
+
 # Other config
 timezone = '+03:00' # Timezone for searching images on Derpibooru
 config = '.tabun-pack/number' # Where to store pack number (relative to '~')
 period = 7 # How many days to get pics from
 piclimit = 15 # How many pictures to retrieve (not including OP pic, max 49)
+bonuslimit = 3 # How many pictures to retrieve for bonus section
 
 ##############################################################################
 
@@ -111,26 +120,32 @@ def db_replace(string, picture, mirror, defaults):
     return string
 
 # First, get pictures from Derpibooru
-date = datetime.date.today() - datetime.timedelta(days=period)
-also = also.strip()
-if also[0] != ',':
-    also = ', ' + also
-dbtags = pony + also + ', created_at.gte:' + date.strftime('%Y-%m-%d') + timezone
-params = [('sf', sort), ('per_page', piclimit + 1), ('q', dbtags)]
-proxies = {} if proxy == '' else {'https': proxy}
-print('Retrieving from derpibooru by tags:', dbtags)
-try:
-    response = requests.get(mirror + '/api/v1/json/search/images', params=params, proxies=proxies)
-except requests.exceptions.RequestException as e:
-    print('HTTPS request error:', e)
-    sys.exit(2)
-try:
-    json = response.json();
-except json.JSONDecodeError as e:
-    print('JSON decode error:', e)
-    sys.exit(3)
-total = len(json['images'])
-print('Retrieved', total, 'images of', str(json['total']) + '.')
+def derpibooru_get(ponytags, limit):
+    date = datetime.date.today() - datetime.timedelta(days=period)
+    also_fixed = also.strip()
+    if also_fixed[0] != ',':
+        also_fixed = ', ' + also_fixed
+    dbtags = ponytags + also_fixed + ', created_at.gte:' + date.strftime('%Y-%m-%d') + timezone
+    params = [('sf', sort), ('per_page', limit), ('q', dbtags)]
+    proxies = {} if proxy == '' else {'https': proxy}
+    print('Retrieving from derpibooru by tags:', dbtags)
+    try:
+        response = requests.get(mirror + '/api/v1/json/search/images', params=params, proxies=proxies)
+    except requests.exceptions.RequestException as e:
+        print('HTTPS request error:', e)
+        sys.exit(2)
+    try:
+        json = response.json();
+    except json.JSONDecodeError as e:
+        print('JSON decode error:', e)
+        sys.exit(3)
+    total = len(json['images'])
+    print('Retrieved', total, 'images of', str(json['total']) + '.')
+    return json, total
+
+json_main, total_main = derpibooru_get(pony, piclimit + 1)
+if bonuslimit > 0:
+    json_bonus, total_bonus = derpibooru_get(bonuspony + ", -" + pony, bonuslimit)
 
 # Login to Tabun
 print('Logging in...')
@@ -141,36 +156,59 @@ except tabun_api.TabunResultError as e:
     sys.exit(4)
 
 # Upload pictures and put links into a template body
-current_pic = 0
-pic_block = ''
-for picture in json['images']:
-    desc = picture['description'].replace('\r\n', ' ')
-    if len(desc) > 50:
-        desc = desc[0:50] + '(...)'
-    progress = "OP picture" if current_pic == 0 else '[' + str(current_pic) + '/' + str(total - 1) + ']'
-    print('Uploading ' + progress + ' (' + mirror + '/images/' + str(picture['id']) + '):', desc)
-    link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
-    try:
-        alttext = db_replace(tmpl_alttext, picture, mirror, defaults)
-        img_link = tabun.upload_image_link(link_rep, title=alttext, parse_link=False)
-        img_url = tabun.upload_image_link(picture['representations']['full'], parse_link=True)
-    except tabun_api.TabunError as e:
-        print('Tabun upload error:', e)
-        sys.exit(5)
-    if current_pic == 0:
-        op_pic = tmpl_op_pic.replace('__PIC__', img_url).replace('__FULL__', img_link)
-        op_pic = db_replace(op_pic, picture, mirror, defaults)
+def upload_pics(json, total, is_bonus):
+    if is_bonus:
+        current_pic = 1
+        caption = 'Bonus'
     else:
-        if spoilerpics == None or len(spoilerpics) < current_pic:
-            spoiler_header = tmpl_text_spoiler_header
+        current_pic = 0 # current_pic = 0 indicates OP picture
+        total -= 1 # Skip OP pic from counting
+        caption = 'Main '
+    block = ''
+    op_pic = ''
+    for picture in json['images']:
+        desc = picture['description'].replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
+        if len(desc) > 50:
+            desc = desc[0:50] + '(...)'
+        progress = 'OP picture  ' if current_pic == 0 else caption + ' [' + str(current_pic) + '/' + str(total) + ']'
+        print('Uploading ' + progress + ' (' + mirror + '/images/' + str(picture['id']) + '):', desc)
+        link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
+        try:
+            alttext = db_replace(tmpl_alttext, picture, mirror, defaults)
+            img_link = tabun.upload_image_link(link_rep, title=alttext, parse_link=False)
+            img_url = tabun.upload_image_link(picture['representations']['full'], parse_link=True)
+        except tabun_api.TabunError as e:
+            print('Tabun upload error:', e)
+            sys.exit(5)
+        if current_pic == 0:
+            op_pic = tmpl_op_pic.replace('__PIC__', img_url).replace('__FULL__', img_link)
+            op_pic = db_replace(op_pic, picture, mirror, defaults)
         else:
-            spoiler_header = tmpl_pic_spoiler_header.replace('__PIC__', spoilerpics[current_pic - 1])
-        spoiler_header = spoiler_header.replace('___', str(current_pic))
-        spoiler_contents = tmpl_spoiler_contents.replace('__PIC__', img_url).replace('__FULL__', img_link).replace('___', str(current_pic))
-        pic_block += '<span class="spoiler"><span class="spoiler-title">' + spoiler_header + '</span><span class="spoiler-body">' + spoiler_contents + '</span></span>'
-        pic_block = db_replace(pic_block, picture, mirror, defaults)
-    current_pic += 1
-body = tmpl_body.replace('__OP_PIC__', op_pic).replace('__PIC_BLOCK__', pic_block)
+            if is_bonus:
+                spoiler_contents = tmpl_spoiler_contents_bonus
+                if bonuspic == None or bonuspic == '':
+                    spoiler_header = tmpl_text_spoiler_header_bonus
+                else:
+                    spoiler_header = tmpl_pic_spoiler_header_bonus.replace('__PIC__', bonuspic)
+            else:
+                spoiler_contents = tmpl_spoiler_contents
+                if spoilerpics == None or len(spoilerpics) < current_pic:
+                    spoiler_header = tmpl_text_spoiler_header
+                else:
+                    spoiler_header = tmpl_pic_spoiler_header.replace('__PIC__', spoilerpics[current_pic - 1])
+            spoiler_header = spoiler_header.replace('___', str(current_pic))
+            spoiler_contents = spoiler_contents.replace('__PIC__', img_url).replace('__FULL__', img_link).replace('___', str(current_pic))
+            block += '<span class="spoiler"><span class="spoiler-title">' + spoiler_header + '</span><span class="spoiler-body">' + spoiler_contents + '</span></span>'
+            block = db_replace(block, picture, mirror, defaults)
+        current_pic += 1
+    return block, op_pic
+
+pic_block, op_block = upload_pics(json_main, total_main, is_bonus=False)
+if bonuslimit > 0:
+    bonus_block = upload_pics(json_bonus, total_bonus, is_bonus=True)[0]
+else:
+    bonus_block = ''
+body = tmpl_body.replace('__OP_PIC__', op_block).replace('__PIC_BLOCK__', pic_block + bonus_block)
 
 # Check pack number and set title and body placeholders
 configfile = Path(str(Path.home()) + '/' + config)
