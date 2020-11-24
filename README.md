@@ -53,7 +53,7 @@ pip3 install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]
 * На место `___` подставится номер спойлера (везде, кроме `tmpl_op_pic`).
 * На место `__PIC__` подставится URL картинки из `spoilerpics` (только в `tmpl_pic_spoiler_header` и `tmpl_pic_spoiler_header_bonus`).
 * На место `__PIC__` подставится URL картинки-превью (только в `tmpl_op_pic`, `tmpl_spoiler_contents` и `tmpl_spoiler_contents_bonus`).
-* На место `__FULL__` подставится полная ссылка на хайрез картинки  (только в `tmpl_op_pic`, `tmpl_spoiler_contents` и `tmpl_spoiler_contents_bonus`).
+* На место `__FULL__` подставится полная ссылка на хайрез картинки (только в `tmpl_op_pic`, `tmpl_spoiler_contents` и `tmpl_spoiler_contents_bonus`).
 * На место `__DESC__` подставится описание картинки на дёрпибуре, если оно задано (иначе значение из `defaults`).
 * На место `__NAME__` подставится название картинки на дёрпибуре, если оно задано (иначе значение из `defaults`).
 * На место `__UPLOADER__` подставится ник загрузившего картинку на дёрпибуру, если он задан (иначе значение из `defaults`).
