@@ -41,7 +41,7 @@ __PIC_BLOCK__
 # __FULL__ : <img> tag of full-resolution picture (not in *_spoiler_header)
 # __DESC__ : Derpibooru picture description
 # __NAME__ : Derpibooru picture name
-# __UPLOADER__ : Derpibooru picture uploader
+# __AUTHOR__ : Derpibooru picture artist (or uploader, if no artist tag is given)
 # __SOURCE__ : Derpibooru picture source URL
 # __ID__ : Derpibooru picture ID
 # __DB_URL__ : Derpibooru URL of picture page
@@ -63,7 +63,7 @@ tmpl_spoiler_contents_bonus = """<a href="__DB_URL__" target="_blank">***</a>
 defaults = {
     'description':'',
     'name':'Без названия',
-    'uploader':'неизвестный автор',
+    'author':'неизвестный автор',
     'source_url':'неизвестен',
 }
 
@@ -111,9 +111,15 @@ except ImportError as e:
 
 # A function to replace placeholders in picture block
 def db_replace(string, picture, mirror, defaults):
+    author = defaults['author']
+    if picture['uploader'] != None:
+        author = picture['uploader']
+    for tag in picture['tags']:
+        if 'artist:' in tag:
+            author = tag.replace('artist:','')
     string = string.replace('__DESC__', picture['description'] if picture['description'] != None else defaults['description'])
     string = string.replace('__NAME__', picture['name'] if picture['name'] != None else defaults['name'])
-    string = string.replace('__UPLOADER__', picture['uploader'] if picture['uploader'] != None else defaults['uploader'])
+    string = string.replace('__AUTHOR__', author)
     string = string.replace('__SOURCE__', picture['source_url'] if picture['source_url'] != None else defaults['source_url'])
     string = string.replace('__ID__', str(picture['id']))
     string = string.replace('__DB_URL__', mirror + '/images/' + str(picture['id']))
