@@ -82,7 +82,7 @@ spoilerpics = [
 #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/de350c0e28.png',
 #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/72f506e5df.png',
 ]
-# If less items than piclimit, remaining spoilers will be text ones
+# If less items than requested, remaining spoilers will be text ones
 
 # Pic for bonus block (None or '' for no picture)
 bonuspic = '' # 'https://cdn.everypony.ru/storage/06/08/97/2020/11/24/21df10c0b9.png'
@@ -90,9 +90,8 @@ bonuspic = '' # 'https://cdn.everypony.ru/storage/06/08/97/2020/11/24/21df10c0b9
 # Other config
 timezone = '+03:00' # Timezone for searching images on Derpibooru
 config = '.tabun-pack/number' # Where to store pack number (relative to '~')
+pick = '.tabun_pack/test.html' # Where to create cherry-pick html (relative to '~')
 period = 7 # How many days to get pics from
-piclimit = 15 # How many pictures to retrieve (not including OP pic, max 49)
-bonuslimit = 3 # How many pictures to retrieve for bonus section
 
 ##############################################################################
 
@@ -145,13 +144,55 @@ def derpibooru_get(ponytags, limit):
     except json.JSONDecodeError as e:
         print('JSON decode error:', e)
         sys.exit(3)
-    total = len(json['images'])
-    print('Retrieved', total, 'images of', str(json['total']) + '.')
-    return json, total
+    print('Retrieved', len(json['images']), 'images of', str(json['total']) + '.')
+    return json
 
-json_main, total_main = derpibooru_get(pony, piclimit + 1)
-if bonuslimit > 0:
-    json_bonus, total_bonus = derpibooru_get(bonuspony + ", -" + pony, bonuslimit)
+json_main = derpibooru_get(pony, 50)
+if bonuspony != '':
+    json_bonus = derpibooru_get(bonuspony + ", -" + pony, 50)
+
+# Form a cherry-pick html data
+def cherrypick_line(json):
+    data = ''
+    for num, picture in enumerate(json['images']):
+        data += '<tr><td>' + str(num) + '</td><td><img src="' + picture['representations']['medium'] + '"></td>'
+    return data
+
+pickdata = '<html><body><h1>Main pack:</h1><table>' + cherrypick_line(json_main)
+if bonuspony != '':
+    pickdata += '</table><h1>Bonus pack:</h1><table>' + cherrypick_line(json_bonus)
+pickdata += '</table></body></html>'
+
+# Create a cherry-pick html
+pickfile = Path(str(Path.home()) + '/' + pick)
+pickfile.parent.mkdir(parents=True, exist_ok=True)
+pickfile.write_text(pickdata)
+print('Now open', pickfile.as_uri(), 'and choose the best pictures.')
+
+# Get a list of pictures to put there
+def cherry_pick(prompt, json):
+    data = []
+    numbers = input(prompt)
+    if numbers != '':
+        numbers = numbers.replace(';', ',').replace(',', ' ').split()
+        for num in numbers:
+            try:
+                n = int(num)
+            except ValueError:
+                print('Note:', num, 'is not a number, skipped.')
+                continue
+            try:
+                data.append(json['images'][n])
+            except IndexError:
+                print('Note:', n, 'is out of range; maximum is', len(json['images']))
+                continue
+    return data
+
+data_main = cherry_pick('Pictures for main pack: ', json_main)
+if bonuspony != '':
+    data_bonus = cherry_pick('Pictures for bonus pack: ', json_bonus)
+if data_bonus == []:
+    bonuspony = ''
 
 # Login to Tabun
 print('Logging in...')
@@ -162,21 +203,20 @@ except tabun_api.TabunResultError as e:
     sys.exit(4)
 
 # Upload pictures and put links into a template body
-def upload_pics(json, total, is_bonus):
+def upload_pics(data, is_bonus):
     if is_bonus:
         current_pic = 1
         caption = 'Bonus'
     else:
         current_pic = 0 # current_pic = 0 indicates OP picture
-        total -= 1 # Skip OP pic from counting
         caption = 'Main '
     block = ''
     op_pic = ''
-    for picture in json['images']:
+    for picture in data:
         desc = picture['description'].replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
         if len(desc) > 50:
             desc = desc[0:50] + '(...)'
-        progress = 'OP picture  ' if current_pic == 0 else caption + ' [' + str(current_pic) + '/' + str(total) + ']'
+        progress = 'OP picture  ' if current_pic == 0 else caption + ' [' + str(current_pic) + ']'
         print('Uploading ' + progress + ' (' + mirror + '/images/' + str(picture['id']) + '):', desc)
         link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
         try:
@@ -209,9 +249,9 @@ def upload_pics(json, total, is_bonus):
         current_pic += 1
     return block, op_pic
 
-pic_block, op_block = upload_pics(json_main, total_main, is_bonus=False)
-if bonuslimit > 0:
-    bonus_block = upload_pics(json_bonus, total_bonus, is_bonus=True)[0]
+pic_block, op_block = upload_pics(data_main, is_bonus=False)
+if bonuspony != '':
+    bonus_block = upload_pics(data_bonus, is_bonus=True)[0]
 else:
     bonus_block = ''
 body = tmpl_body.replace('__OP_PIC__', op_block).replace('__PIC_BLOCK__', pic_block + bonus_block)
