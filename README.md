@@ -22,7 +22,8 @@ pip3 install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]
 * [x] `username` — логин на табуне.
 * [x] `password` — пароль от табуна.
 * [ ] `proxy` — прокси, если нужен, иначе просто пустая строка.
-* [ ] `mirror` — зеркало дёрпибуры (у меня работает то, которое там приведено, остальные без проксика недоступны).
+* [ ] `mirror` — адрес буры.
+* [ ] `apitype` — вариант API сайта: `derpibooru` (для [Derpibooru](https://www.derpibooru.org), [Trixiebooru](https://www.trixiebooru.org)) или `twibooru` (для [Twibooru](https://www.twibooru.org)).
 * [x] `title` — название поста, в нём на место `___` (три подчёркивания) подставится номер пака (начинается с 1 и дальше увеличивается).
 * [x] `tags` — теги, которые будут у поста.
 * [x] `blog_id` — численный идентификатор блога, куда постить или строка из URL ссылки на блог (например, ЯРОК — это `fanart`, ЗХ — `sketch_drawing`, БПНХ — `draw_help`, СБК — `rough_blog`, награнь — `borderline`). 0 — это персональный блог.

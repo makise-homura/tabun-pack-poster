@@ -11,7 +11,8 @@ proxy = ''
 # Or use something like 'http://user:passwd@httpsproxy.net:8080'
 
 # Derpibooru mirror to use
-mirror = 'https://www.trixiebooru.org' # the only available in RU w/o proxy
+mirror = 'https://www.trixiebooru.org' # the only Derpibooru mirror available in RU w/o proxy
+apitype = 'derpibooru' # derpibooru or twibooru
 
 # Post properties (use three underscores to substitute pack number in title)
 title = 'Пак имени лучшей музыкальной пони №___'
@@ -124,8 +125,13 @@ def db_replace(string, picture, mirror, defaults):
     string = string.replace('__DB_URL__', mirror + '/images/' + str(picture['id']))
     return string
 
-# First, get pictures from Derpibooru
-def derpibooru_get(ponytags, limit):
+api = {
+    'derpibooru': {'path': '/api/v1/json/search/images', 'jsonarray': 'images', 'jsontotal': 'total'},
+    'twibooru':   {'path': '/search.json',               'jsonarray': 'search', 'jsontotal': 'total'}
+}
+
+# First, get pictures from chosen booru
+def booru_get(ponytags, limit):
     date = datetime.date.today() - datetime.timedelta(days=period)
     also_fixed = also.strip()
     if also_fixed[0] != ',':
@@ -133,9 +139,9 @@ def derpibooru_get(ponytags, limit):
     dbtags = ponytags + also_fixed + ', created_at.gte:' + date.strftime('%Y-%m-%d') + timezone
     params = [('sf', sort), ('per_page', limit), ('q', dbtags)]
     proxies = {} if proxy == '' else {'https': proxy}
-    print('Retrieving from derpibooru by tags:', dbtags)
+    print('Retrieving from', mirror, 'by tags:', dbtags)
     try:
-        response = requests.get(mirror + '/api/v1/json/search/images', params=params, proxies=proxies)
+        response = requests.get(mirror + api[apitype]['path'], params=params, proxies=proxies)
     except requests.exceptions.RequestException as e:
         print('HTTPS request error:', e)
         sys.exit(2)
@@ -144,17 +150,17 @@ def derpibooru_get(ponytags, limit):
     except json.JSONDecodeError as e:
         print('JSON decode error:', e)
         sys.exit(3)
-    print('Retrieved', len(json['images']), 'images of', str(json['total']) + '.')
+    print('Retrieved', len(json[api[apitype]['jsonarray']]), 'images of', str(json[api[apitype]['jsontotal']]) + '.')
     return json
 
-json_main = derpibooru_get(pony, 50)
+json_main = booru_get(pony, 50)
 if bonuspony != '':
-    json_bonus = derpibooru_get(bonuspony + ", -" + pony, 50)
+    json_bonus = booru_get(bonuspony + ", -" + pony, 50)
 
 # Form a cherry-pick html data
 def cherrypick_line(json):
     data = ''
-    for num, picture in enumerate(json['images']):
+    for num, picture in enumerate(json[api[apitype]['jsonarray']]):
         data += '<tr><td>' + str(num) + '</td><td><img src="' + picture['representations']['medium'] + '"></td>'
     return data
 
@@ -182,9 +188,9 @@ def cherry_pick(prompt, json):
                 print('Note:', num, 'is not a number, skipped.')
                 continue
             try:
-                data.append(json['images'][n])
+                data.append(json[api[apitype]['jsonarray']][n])
             except IndexError:
-                print('Note:', n, 'is out of range; maximum is', len(json['images']))
+                print('Note:', n, 'is out of range; maximum is', len(json[api[apitype]['jsonarray']]))
                 continue
     return data
 
