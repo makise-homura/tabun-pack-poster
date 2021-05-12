@@ -90,7 +90,7 @@ bonuspic = '' # 'https://cdn.everypony.ru/storage/06/08/97/2020/11/24/21df10c0b9
 # Other config
 timezone = '+03:00' # Timezone for searching images on Derpibooru
 config = '.tabun-pack/number' # Where to store pack number (relative to '~')
-pick = '.tabun_pack/test.html' # Where to create cherry-pick html (relative to '~')
+pick = '.tabun_pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry'
 period = 7 # How many days to get pics from
 
 ##############################################################################
@@ -100,6 +100,34 @@ import datetime
 import json
 import requests
 from pathlib import Path
+import http.cookiejar
+import urllib.parse
+import urllib.request
+from http.cookies import SimpleCookie
+
+# Urllib client for rentry
+class UrllibClient:
+    """Simple HTTP Session Client, keeps cookies."""
+
+    def __init__(self):
+        self.cookie_jar = http.cookiejar.CookieJar()
+        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookie_jar))
+        urllib.request.install_opener(self.opener)
+
+    def get(self, url, headers={}):
+        request = urllib.request.Request(url, headers=headers)
+        return self._request(request)
+
+    def post(self, url, data=None, headers={}):
+        postdata = urllib.parse.urlencode(data).encode()
+        request = urllib.request.Request(url, postdata, headers)
+        return self._request(request)
+
+    def _request(self, request):
+        response = self.opener.open(request)
+        response.status_code = response.getcode()
+        response.data = response.read().decode('utf-8')
+        return response
 
 # tabun_api might be missing, so let user know about it
 try:
@@ -151,23 +179,63 @@ json_main = derpibooru_get(pony, 50)
 if bonuspony != '':
     json_bonus = derpibooru_get(bonuspony + ", -" + pony, 50)
 
+# Deal with special upload protocols
+if pick[:2] == '*:':
+    pickproto = pick[2:]
+    if pickproto == 'rentry':
+        mainheader = '# Main pack:\n\n'
+        bonusheader = '# Bonus pack:\n\n'
+        footer = ''
+        lineleft = ''
+        linemiddle = ': ![]('
+        lineright = ')\n\n'
+    else:
+        print('Unknown special protocol:', pickproto)
+        sys.exit(3)
+else:
+    pickproto = 'textfile'
+    mainheader = '<html><body><h1>Main pack:</h1><table>'
+    bonusheader = '</table><h1>Bonus pack:</h1><table>'
+    footer = '</table></body></html>'
+    lineleft = '<tr><td>'
+    linemiddle = '</td><td><img src="'
+    lineright = '"></td>'
+
 # Form a cherry-pick html data
 def cherrypick_line(json):
     data = ''
     for num, picture in enumerate(json['images']):
-        data += '<tr><td>' + str(num) + '</td><td><img src="' + picture['representations']['medium'] + '"></td>'
+        data += lineleft + str(num) + linemiddle + picture['representations']['medium'] + lineright
     return data
 
-pickdata = '<html><body><h1>Main pack:</h1><table>' + cherrypick_line(json_main)
+pickdata = mainheader + cherrypick_line(json_main)
 if bonuspony != '':
-    pickdata += '</table><h1>Bonus pack:</h1><table>' + cherrypick_line(json_bonus)
-pickdata += '</table></body></html>'
+    pickdata += bonusheader + cherrypick_line(json_bonus)
+pickdata += footer
 
 # Create a cherry-pick html
-pickfile = Path(str(Path.home()) + '/' + pick)
-pickfile.parent.mkdir(parents=True, exist_ok=True)
-pickfile.write_text(pickdata)
-print('Now open', pickfile.as_uri(), 'and choose the best pictures.')
+def create_textfile(data):
+    pickfile = Path(str(Path.home()) + '/' + pick)
+    pickfile.parent.mkdir(parents=True, exist_ok=True)
+    pickfile.write_text(data)
+    return pickfile.as_uri()
+
+def upload_rentry(data):
+    client, cookie = UrllibClient(), SimpleCookie()
+    cookie.load(vars(client.get('https://rentry.co'))['headers']['Set-Cookie'])
+    csrftoken = cookie['csrftoken'].value
+    payload = {'csrfmiddlewaretoken': csrftoken, 'url': '', 'edit_code': '', 'text': data}
+    response = json.loads(client.post('https://rentry.co/api/new', payload, headers={"Referer": 'https://rentry.co'}).data)
+    if response['status'] == '200': return response['url']
+    print('Upload error: {}'.format(response['content']))
+    sys.exit(3)
+
+if pickproto == 'textfile':
+    pickfilename = create_textfile(pickdata)
+if pickproto == 'rentry':
+    pickfilename = upload_rentry(pickdata)
+
+print('Now open', pickfilename, 'and choose the best pictures.')
 
 # Get a list of pictures to put there
 def cherry_pick(prompt, json):
