@@ -197,7 +197,7 @@ if pick[:2] == '*:':
         lineright = ')\n\n'
     else:
         print('Unknown special protocol:', pickproto)
-        sys.exit(3)
+        sys.exit(31)
 else:
     pickproto = 'textfile'
     mainheader = '<html><body><h1>Main pack:</h1><table>'
@@ -234,7 +234,7 @@ def upload_rentry(data):
     response = json.loads(client.post('https://rentry.co/api/new', payload, headers={"Referer": 'https://rentry.co'}).data)
     if response['status'] == '200': return response['url']
     print('Upload error: {}'.format(response['content']))
-    sys.exit(3)
+    sys.exit(32)
 
 if pickproto == 'textfile':
     pickfilename = create_textfile(pickdata)
