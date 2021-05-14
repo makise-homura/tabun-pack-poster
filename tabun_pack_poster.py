@@ -137,6 +137,11 @@ except ImportError as e:
     print('Install Tabun API: pip install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]')
     sys.exit(1)
 
+api = {
+    'derpibooru': {'path': '/api/v1/json/search/images', 'jsonarray': 'images', 'jsontotal': 'total', 'jsonname': 'name',      'imgpath': '/images/'},
+    'twibooru':   {'path': '/search.json',               'jsonarray': 'search', 'jsontotal': 'total', 'jsonname': 'file_name', 'imgpath': '/'}
+}
+
 # A function to replace placeholders in picture block
 def db_replace(string, picture, mirror, defaults):
     author = defaults['author']
@@ -146,17 +151,12 @@ def db_replace(string, picture, mirror, defaults):
         if 'artist:' in tag:
             author = tag.replace('artist:','')
     string = string.replace('__DESC__', picture['description'] if picture['description'] != None else defaults['description'])
-    string = string.replace('__NAME__', picture['name'] if picture['name'] != None else defaults['name'])
+    string = string.replace('__NAME__', picture[api[apitype]['jsonname']] if picture[api[apitype]['jsonname']] != None else defaults['name'])
     string = string.replace('__AUTHOR__', author)
     string = string.replace('__SOURCE__', picture['source_url'] if picture['source_url'] != None else defaults['source_url'])
     string = string.replace('__ID__', str(picture['id']))
-    string = string.replace('__DB_URL__', mirror + '/images/' + str(picture['id']))
+    string = string.replace('__DB_URL__', mirror + api[apitype]['imgpath'] + str(picture['id']))
     return string
-
-api = {
-    'derpibooru': {'path': '/api/v1/json/search/images', 'jsonarray': 'images', 'jsontotal': 'total'},
-    'twibooru':   {'path': '/search.json',               'jsonarray': 'search', 'jsontotal': 'total'}
-}
 
 # First, get pictures from chosen booru
 def booru_get(ponytags, limit):
