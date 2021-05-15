@@ -91,7 +91,7 @@ bonuspic = '' # 'https://cdn.everypony.ru/storage/06/08/97/2020/11/24/21df10c0b9
 # Other config
 timezone = '+03:00' # Timezone for searching images on Derpibooru
 config = '.tabun-pack/number' # Where to store pack number (relative to '~')
-pick = '.tabun_pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry'
+pick = '.tabun-pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry'
 period = 7 # How many days to get pics from
 
 ##############################################################################
