@@ -293,7 +293,7 @@ def upload_pics(data, is_bonus):
         if len(desc) > 50:
             desc = desc[0:50] + '(...)'
         progress = 'OP picture  ' if current_pic == 0 else caption + ' [' + str(current_pic) + ']'
-        print('Uploading ' + progress + ' (' + mirror + '/images/' + str(picture['id']) + '):', desc)
+        print('Uploading ' + progress + ' (' + mirror + api[apitype]['imgpath'] + str(picture['id']) + '):', desc)
         link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
         path = mirror if api[apitype]['addpath'] else ''
         try:
