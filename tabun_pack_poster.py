@@ -16,7 +16,7 @@ apitype = 'derpibooru' # derpibooru, ponerpics, or twibooru
 
 # Post properties (use three underscores to substitute pack number in title)
 title = 'Пак имени лучшей музыкальной пони №___'
-tags = ['Лира Харстрингс', 'Лира', 'Lyra Heartstrings', 'Lyra', 'пак', 'картинки']
+tags = ['Лира Хартстрингс', 'Лира', 'Lyra Heartstrings', 'Lyra', 'пак', 'картинки']
 blog_id = 'Heartstrings' # integer ID or string from URL; 0 = your personal blog
 
 # Tags to sort and search on Derpibooru
