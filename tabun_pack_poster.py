@@ -10,9 +10,9 @@ password = 'your password on tabun'
 proxy = ''
 # Or use something like 'http://user:passwd@httpsproxy.net:8080'
 
-# Derpibooru mirror to use
+# Derpibooru mirror to use (or other booru, like https://www.twibooru.org or https://ponerpics.org)
 mirror = 'https://www.trixiebooru.org' # the only Derpibooru mirror available in RU w/o proxy
-apitype = 'derpibooru' # derpibooru or twibooru
+apitype = 'derpibooru' # derpibooru, ponerpics, or twibooru
 
 # Post properties (use three underscores to substitute pack number in title)
 title = 'Пак имени лучшей музыкальной пони №___'
@@ -138,8 +138,9 @@ except ImportError as e:
     sys.exit(1)
 
 api = {
-    'derpibooru': {'path': '/api/v1/json/search/images', 'jsonarray': 'images', 'jsontotal': 'total', 'jsonname': 'name',      'imgpath': '/images/'},
-    'twibooru':   {'path': '/search.json',               'jsonarray': 'search', 'jsontotal': 'total', 'jsonname': 'file_name', 'imgpath': '/'}
+    'derpibooru': {'path': '/api/v1/json/search/images', 'jsonarray': 'images', 'jsontotal': 'total', 'jsonname': 'name',      'imgpath': '/images/', 'addpath': False },
+    'ponerpics':  {'path': '/api/v1/json/search/images', 'jsonarray': 'images', 'jsontotal': 'total', 'jsonname': 'name',      'imgpath': '/images/', 'addpath': True  },
+    'twibooru':   {'path': '/search.json',               'jsonarray': 'search', 'jsontotal': 'total', 'jsonname': 'file_name', 'imgpath': '/',        'addpath': False }
 }
 
 # A function to replace placeholders in picture block
@@ -210,8 +211,9 @@ else:
 # Form a cherry-pick html data
 def cherrypick_line(json):
     data = ''
+    path = mirror if api[apitype]['addpath'] else ''
     for num, picture in enumerate(json[api[apitype]['jsonarray']]):
-        data += lineleft + str(num) + linemiddle + picture['representations']['medium'] + lineright
+        data += lineleft + str(num) + linemiddle + path + picture['representations']['medium'] + lineright
     return data
 
 pickdata = mainheader + cherrypick_line(json_main)
@@ -293,10 +295,11 @@ def upload_pics(data, is_bonus):
         progress = 'OP picture  ' if current_pic == 0 else caption + ' [' + str(current_pic) + ']'
         print('Uploading ' + progress + ' (' + mirror + '/images/' + str(picture['id']) + '):', desc)
         link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
+        path = mirror if api[apitype]['addpath'] else ''
         try:
             alttext = db_replace(tmpl_alttext, picture, mirror, defaults)
-            img_link = tabun.upload_image_link(link_rep, title=alttext, parse_link=False)
-            img_url = tabun.upload_image_link(picture['representations']['full'], parse_link=True)
+            img_link = tabun.upload_image_link(path + link_rep, title=alttext, parse_link=False)
+            img_url = tabun.upload_image_link(path + picture['representations']['full'], parse_link=True)
         except tabun_api.TabunError as e:
             print('Tabun upload error:', e)
             sys.exit(5)
