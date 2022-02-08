@@ -93,6 +93,7 @@ timezone = '+03:00' # Timezone for searching images on Derpibooru
 config = '.tabun-pack/number' # Where to store pack number (relative to '~')
 pick = '.tabun-pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry'
 period = 7 # How many days to get pics from
+offset = {'years': 1} # How long to offset the date from current day (None for no offset, supports 'years', 'months', 'days')
 
 ##############################################################################
 
@@ -105,6 +106,7 @@ import http.cookiejar
 import urllib.parse
 import urllib.request
 from http.cookies import SimpleCookie
+from dateutil.relativedelta import relativedelta
 
 # Urllib client for rentry
 class UrllibClient:
@@ -161,11 +163,21 @@ def db_replace(string, picture, mirror, defaults):
 
 # First, get pictures from chosen booru
 def booru_get(ponytags, limit):
-    date = datetime.date.today() - datetime.timedelta(days=period)
+    if (offset):
+        y = offset['years'] if 'years' in offset else 0
+        m = offset['months'] if 'months' in offset else 0
+        d = offset['days'] if 'days' in offset else 0
+        hdate = datetime.date.today() - relativedelta(years = y, months = m, days = d)
+        ldate = hdate - datetime.timedelta(days = period)
+        datetags = ', created_at.gte:' + ldate.strftime('%Y-%m-%d') + timezone + ', created_at.lte:' + hdate.strftime('%Y-%m-%d') + timezone
+    else:
+        date = datetime.date.today() - datetime.timedelta(days=period)
+        datetags = ', created_at.gte:' + date.strftime('%Y-%m-%d') + timezone
+
     also_fixed = also.strip()
     if also_fixed[0] != ',':
         also_fixed = ', ' + also_fixed
-    dbtags = ponytags + also_fixed + ', created_at.gte:' + date.strftime('%Y-%m-%d') + timezone
+    dbtags = ponytags + also_fixed + datetags
     params = [('sf', sort), ('per_page', limit), ('q', dbtags)]
     proxies = {} if proxy == '' else {'https': proxy}
     print('Retrieving from', mirror, 'by tags:', dbtags)
