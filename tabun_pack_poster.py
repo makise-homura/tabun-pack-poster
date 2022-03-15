@@ -101,6 +101,7 @@ import sys
 import datetime
 import json
 import requests
+import emoji
 from pathlib import Path
 import http.cookiejar
 import urllib.parse
@@ -365,7 +366,7 @@ if type(blog_id) == str:
         print('Tabun blog search error:', e)
         sys.exit(9)
 try:
-    blog, post_id = tabun.add_post(blog_id, title, body, tags, forbid_comment=False, draft=True)
+    blog, post_id = tabun.add_post(blog_id, title, emoji.demojize(body), tags, forbid_comment=False, draft=True)
 except tabun_api.TabunError as e:
     print('Tabun posting error:', e)
     sys.exit(10)

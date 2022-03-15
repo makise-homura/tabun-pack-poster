@@ -12,7 +12,7 @@
 
 2. Поставить нужные модули, в особенности [tabun_api](https://andreymal.org/tabun/api_doc/main.html) от Андреймала (остальные, скорее всего, уже стоят):
 ```
-pip3 install datetime requests pathlib http3 urllib3 python-dateutil
+pip3 install datetime requests pathlib http3 urllib3 python-dateutil emoji
 pip3 install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]
 ```
 Если `pip3` нет, то скорее всего, можно использовать команду `pip` вместо неё: такое бывает, если третий питон — единственный стоящий на машине.
