@@ -298,8 +298,8 @@ def cherry_pick(prompt, images):
 data_main = cherry_pick('Pictures for main pack: ', images_main)
 if bonuspony != '':
     data_bonus = cherry_pick('Pictures for bonus pack: ', images_bonus)
-if data_bonus == []:
-    bonuspony = ''
+    if data_bonus == []:
+        bonuspony = ''
 
 # Login to Tabun
 print('Logging in...')
