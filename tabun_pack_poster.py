@@ -94,10 +94,12 @@ config = '.tabun-pack/number' # Where to store pack number (relative to '~')
 pick = '.tabun-pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry'
 period = 7 # How many days to get pics from
 offset = {'years': 1} # How long to offset the date from current day (None for no offset, supports 'years', 'months', 'days')
+pagelimit = 0 # Booru page limit (0 - download all pages, 1 - behave as before by loading only one page).
 
 ##############################################################################
 
 import sys
+import time
 import datetime
 import json
 import requests
@@ -163,7 +165,7 @@ def db_replace(string, picture, mirror, defaults):
     return string
 
 # First, get pictures from chosen booru
-def booru_get(ponytags, limit):
+def booru_get(ponytags):
     if (offset):
         y = offset['years'] if 'years' in offset else 0
         m = offset['months'] if 'months' in offset else 0
@@ -175,29 +177,45 @@ def booru_get(ponytags, limit):
         date = datetime.date.today() - datetime.timedelta(days=period)
         datetags = ', created_at.gte:' + date.strftime('%Y-%m-%d') + timezone
 
+    page = 1
+    retrieved = 0
+    limit = 50
+    images = []
     also_fixed = also.strip()
     if also_fixed[0] != ',':
         also_fixed = ', ' + also_fixed
     dbtags = ponytags + also_fixed + datetags
-    params = [('sf', sort), ('per_page', limit), ('q', dbtags)]
     proxies = {} if proxy == '' else {'https': proxy}
     print('Retrieving from', mirror, 'by tags:', dbtags)
-    try:
-        response = requests.get(mirror + api[apitype]['path'], params=params, proxies=proxies)
-    except requests.exceptions.RequestException as e:
-        print('HTTPS request error:', e)
-        sys.exit(2)
-    try:
-        json = response.json();
-    except json.JSONDecodeError as e:
-        print('JSON decode error:', e)
-        sys.exit(3)
-    print('Retrieved', len(json[api[apitype]['jsonarray']]), 'images of', str(json[api[apitype]['jsontotal']]) + '.')
-    return json
+    while pagelimit == 0 or page <= pagelimit:
+        print('Downloading page:', page)
+        params = [('sf', sort), ('per_page', limit), ('page', page), ('q', dbtags)]
+        try:
+            while True:
+                response = requests.get(mirror + api[apitype]['path'], params=params, proxies=proxies)
+                if not response.status_code == 429:
+                    break
+                print('Server requested us to wait a bit...')
+                time.sleep(10)
+        except requests.exceptions.RequestException as e:
+            print('HTTPS request error:', e)
+            sys.exit(2)
+        try:
+            jsonpart = response.json();
+        except requests.exceptions.JSONDecodeError as e:
+            print('JSON decode error:', e)
+            sys.exit(3)
+        retrieved += len(jsonpart[api[apitype]['jsonarray']])
+        print('Retrieved',  + retrieved, 'images of', str(jsonpart[api[apitype]['jsontotal']]) + '.')
+        images += jsonpart[api[apitype]['jsonarray']]
+        page += 1
+        if len(jsonpart[api[apitype]['jsonarray']]) < limit or retrieved >= jsonpart[api[apitype]['jsontotal']]:
+            break
+    return images
 
-json_main = booru_get(pony, 50)
+images_main = booru_get(pony)
 if bonuspony != '':
-    json_bonus = booru_get(bonuspony + ", -" + pony, 50)
+    images_bonus = booru_get(bonuspony + ", -" + pony)
 
 # Deal with special upload protocols
 if pick[:2] == '*:':
@@ -222,16 +240,16 @@ else:
     lineright = '"></td>'
 
 # Form a cherry-pick html data
-def cherrypick_line(json):
+def cherrypick_line(images):
     data = ''
     path = mirror if api[apitype]['addpath'] else ''
-    for num, picture in enumerate(json[api[apitype]['jsonarray']]):
+    for num, picture in enumerate(images):
         data += lineleft + str(num) + linemiddle + path + picture['representations']['medium'] + lineright
     return data
 
-pickdata = mainheader + cherrypick_line(json_main)
+pickdata = mainheader + cherrypick_line(images_main)
 if bonuspony != '':
-    pickdata += bonusheader + cherrypick_line(json_bonus)
+    pickdata += bonusheader + cherrypick_line(images_bonus)
 pickdata += footer
 
 # Create a cherry-pick html
@@ -259,7 +277,7 @@ if pickproto == 'rentry':
 print('Now open', pickfilename, 'and choose the best pictures.')
 
 # Get a list of pictures to put there
-def cherry_pick(prompt, json):
+def cherry_pick(prompt, images):
     data = []
     numbers = input(prompt)
     if numbers != '':
@@ -271,15 +289,15 @@ def cherry_pick(prompt, json):
                 print('Note:', num, 'is not a number, skipped.')
                 continue
             try:
-                data.append(json[api[apitype]['jsonarray']][n])
+                data.append(images[n])
             except IndexError:
-                print('Note:', n, 'is out of range; maximum is', len(json[api[apitype]['jsonarray']]))
+                print('Note:', n, 'is out of range; maximum is', len(images))
                 continue
     return data
 
-data_main = cherry_pick('Pictures for main pack: ', json_main)
+data_main = cherry_pick('Pictures for main pack: ', images_main)
 if bonuspony != '':
-    data_bonus = cherry_pick('Pictures for bonus pack: ', json_bonus)
+    data_bonus = cherry_pick('Pictures for bonus pack: ', images_bonus)
 if data_bonus == []:
     bonuspony = ''
 
