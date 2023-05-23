@@ -334,7 +334,12 @@ def upload_pics(data, is_bonus):
             img_url = tabun.upload_image_link(path + picture['representations']['full'], parse_link=True)
         except tabun_api.TabunError as e:
             print('Tabun upload error:', e)
-            sys.exit(5)
+            print('Falling back to uploading large instead of full.')
+            try:
+                img_url = tabun.upload_image_link(path + picture['representations']['large'], parse_link=True)
+            except tabun_api.TabunError as e:
+                print('Tabun upload error:', e)
+                sys.exit(5)
         if current_pic == 0:
             op_pic = tmpl_op_pic.replace('__PIC__', img_url).replace('__FULL__', img_link)
             op_pic = db_replace(op_pic, picture, mirror, defaults)
