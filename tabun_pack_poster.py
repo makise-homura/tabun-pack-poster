@@ -11,7 +11,7 @@ proxy = ''
 # Or use something like 'http://user:passwd@httpsproxy.net:8080'
 
 # Derpibooru mirror to use (or other booru, like https://www.twibooru.org or https://ponerpics.org)
-mirror = 'https://www.trixiebooru.org' # the only Derpibooru mirror available in RU w/o proxy
+mirror = 'https://www.derpibooru.org'
 apitype = 'derpibooru' # derpibooru, ponerpics, or twibooru
 
 # Post properties (use three underscores to substitute pack number in title)
