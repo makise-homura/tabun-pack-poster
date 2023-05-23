@@ -91,6 +91,7 @@ bonuspic = '' # 'https://cdn.everypony.ru/storage/06/08/97/2020/11/24/21df10c0b9
 # Other config
 timezone = '+03:00' # Timezone for searching images on Derpibooru
 config = '.tabun-pack/number' # Where to store pack number (relative to '~')
+backup = '.tabun-pack/post_backup.txt' # Where to save post source if unable to post to tabun
 pick = '.tabun-pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry'
 period = 7 # How many days to get pics from
 offset = {'years': 1} # How long to offset the date from current day (None for no offset, supports 'years', 'months', 'days')
@@ -387,6 +388,10 @@ try:
     blog, post_id = tabun.add_post(blog_id, title, emoji.demojize(body), tags, forbid_comment=False, draft=True)
 except tabun_api.TabunError as e:
     print('Tabun posting error:', e)
+    print('Saving the source to:', backup)
+    backupfile = Path(str(Path.home()) + '/' + backup)
+    backupfile.parent.mkdir(parents=True, exist_ok=True)
+    backupfile.write_text(emoji.demojize(body))
     sys.exit(10)
 
 print('New post added successfully! Link: https://tabun.everypony.ru/blog/' + str(post_id) + '.html')
