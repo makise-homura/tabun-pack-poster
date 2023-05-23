@@ -96,6 +96,7 @@ pick = '.tabun-pack/test.html' # Where to create cherry-pick html (relative to '
 period = 7 # How many days to get pics from
 offset = {'years': 1} # How long to offset the date from current day (None for no offset, supports 'years', 'months', 'days')
 pagelimit = 0 # Booru page limit (0 - download all pages, 1 - behave as before by loading only one page).
+pressenter = False # Whether to ask to press ENTER on exit (either successful or by failure)
 
 ##############################################################################
 
@@ -105,6 +106,7 @@ import datetime
 import json
 import requests
 import emoji
+import atexit
 from pathlib import Path
 import http.cookiejar
 import urllib.parse
@@ -135,6 +137,12 @@ class UrllibClient:
         response.status_code = response.getcode()
         response.data = response.read().decode('utf-8')
         return response
+
+# Register anykey handler if needed
+def enterhandler():
+    input('Press ENTER to continue')
+if pressenter:
+    atexit.register(enterhandler)
 
 # tabun_api might be missing, so let user know about it
 try:
