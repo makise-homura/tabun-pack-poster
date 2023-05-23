@@ -28,7 +28,7 @@ sort = 'wilson_score' # 'score' looks like not so suitable
 # Post template (__OP_PIC__ and __PIC_BLOCK__ are placeholders)
 # ___ will also be changed to pack number, as in title
 tmpl_body = """
-Пришло время для ___-го пака имени Лиры Харстрингс.
+Пришло время для ___-го пака имени Лиры Хартстрингс.
 __OP_PIC__
 <cut name="Больше мятности и музыкальности! →">
 __PIC_BLOCK__
@@ -50,11 +50,12 @@ tmpl_text_spoiler_header = 'Спойлер ___'
 tmpl_text_spoiler_header_bonus = 'Бонус'
 tmpl_pic_spoiler_header = '<img src = "__PIC__" >'
 tmpl_pic_spoiler_header_bonus = '<img src = "__PIC__" >'
-tmpl_op_pic = '<a href="__PIC__" target="_blank">__FULL__</a>'
+tmpl_op_pic = """<a href="__PIC__" target="_blank">__FULL__</a>'
+<a href="__DB_URL__" target="_blank">*</a> (__AUTHOR__)"""
 tmpl_alttext = '__DESC__'
-tmpl_spoiler_contents = """№ <a href="__DB_URL__" target="_blank">___</a>
+tmpl_spoiler_contents = """№ <a href="__DB_URL__" target="_blank">___</a> (__AUTHOR__)
 <a href="__PIC__" target="_blank">__FULL__</a>"""
-tmpl_spoiler_contents_bonus = """<a href="__DB_URL__" target="_blank">***</a>
+tmpl_spoiler_contents_bonus = """<a href="__DB_URL__" target="_blank">***</a> (__AUTHOR__)
 <a href="__PIC__" target="_blank">__FULL__</a>"""
 # Example: If you wish to link picture preview to derpibooru page
 # instead of pic fullsize, replace __PIC__ with __DB_URL__
