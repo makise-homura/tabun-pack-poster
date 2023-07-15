@@ -50,7 +50,7 @@ tmpl_text_spoiler_header = 'Спойлер ___'
 tmpl_text_spoiler_header_bonus = 'Бонус'
 tmpl_pic_spoiler_header = '<img src = "__PIC__" >'
 tmpl_pic_spoiler_header_bonus = '<img src = "__PIC__" >'
-tmpl_op_pic = """<a href="__PIC__" target="_blank">__FULL__</a>'
+tmpl_op_pic = """<a href="__PIC__" target="_blank">__FULL__</a>
 <a href="__DB_URL__" target="_blank">*</a> (__AUTHOR__)"""
 tmpl_alttext = '__DESC__'
 tmpl_spoiler_contents = """№ <a href="__DB_URL__" target="_blank">___</a> (__AUTHOR__)
@@ -301,7 +301,7 @@ def cherry_pick(prompt, images):
             try:
                 data.append(images[n])
             except IndexError:
-                print('Note:', n, 'is out of range; maximum is', len(images))
+                print('Note:', n, 'is out of range; maximum is', len(images) - 1)
                 continue
     return data
 
@@ -405,7 +405,7 @@ except tabun_api.TabunError as e:
     print('Saving the source to:', backup)
     backupfile = Path(str(Path.home()) + '/' + backup)
     backupfile.parent.mkdir(parents=True, exist_ok=True)
-    backupfile.write_text(emoji.demojize(body))
+    backupfile.write_text(emoji.demojize(body), encoding="utf-8", errors="xmlcharrefreplace")
     sys.exit(10)
 
 print('New post added successfully! Link: https://tabun.everypony.ru/blog/' + str(post_id) + '.html')
