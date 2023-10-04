@@ -230,7 +230,7 @@ if bonuspony != '':
 # Deal with special upload protocols
 if pick[:2] == '*:':
     pickproto = pick[2:]
-    if pickproto == 'rentry':
+    if pickproto == 'rentry' or pickproto == 'dpaste':
         mainheader = '# Main pack:\n\n'
         bonusheader = '# Bonus pack:\n\n'
         footer = ''
@@ -279,10 +279,31 @@ def upload_rentry(data):
     print('Upload error: {}'.format(response['content']))
     sys.exit(32)
 
+def upload_dpaste(data):
+    r_data = {"content": data, "syntax": "md", "expiry_days": 1}
+    r_headers = {"User-Agent": "Tabun Pack Poster"}
+    try:
+        r = requests.post("https://dpaste.com/api/", data=r_data, headers=r_headers)
+        if r.status_code == 201:
+            return r.text.rstrip() + '-preview'
+        else:
+            try:
+                j = r.json();
+                print('Can not upload to dpaste:', j['errors'])
+                sys.exit(32)
+            except json.JSONDecodeError:
+                print('Can not upload to dpaste, but no valid error JSON. Response got:', r.text)
+                sys.exit(32)
+    except requests.exceptions.RequestException as e:
+        print('Upload error: ', e)
+        sys.exit(32)
+
 if pickproto == 'textfile':
     pickfilename = create_textfile(pickdata)
 if pickproto == 'rentry':
     pickfilename = upload_rentry(pickdata)
+if pickproto == 'dpaste':
+    pickfilename = upload_dpaste(pickdata)
 
 print('Now open', pickfilename, 'and choose the best pictures.')
 
