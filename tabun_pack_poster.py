@@ -333,12 +333,17 @@ if bonuspony != '':
         bonuspony = ''
 
 # Login to Tabun
-print('Logging in...')
-try:
-    tabun = tabun_api.User(login=username, passwd=password, proxy=proxy);
-except tabun_api.TabunResultError as e:
-    print('Tabun login error:', e)
-    sys.exit(4)
+while True:
+    print('Logging in...')
+    try:
+        tabun = tabun_api.User(login=username, passwd=password, proxy=proxy)
+    except tabun_api.TabunResultError as e:
+        print('Tabun login error:', e)
+        cont = input('Retry? [y/N]: ')
+        if cont.lower() != 'y':
+            continue
+        sys.exit(4)
+    break
 
 # Upload pictures and put links into a template body
 def upload_pics(data, is_bonus):
@@ -358,18 +363,28 @@ def upload_pics(data, is_bonus):
         print('Uploading ' + progress + ' (' + mirror + api[apitype]['imgpath'] + str(picture['id']) + '):', desc)
         link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
         path = mirror if api[apitype]['addpath'] else ''
-        try:
-            alttext = db_replace(tmpl_alttext, picture, mirror, defaults)
-            img_link = tabun.upload_image_link(path + link_rep, title=alttext, parse_link=False)
-            img_url = tabun.upload_image_link(path + picture['representations']['full'], parse_link=True)
-        except tabun_api.TabunError as e:
-            print('Tabun upload error:', e)
-            print('Falling back to uploading large instead of full.')
+        while True:
             try:
-                img_url = tabun.upload_image_link(path + picture['representations']['large'], parse_link=True)
+                alttext = db_replace(tmpl_alttext, picture, mirror, defaults)
+                img_link = tabun.upload_image_link(path + link_rep, title=alttext, parse_link=False)
+                img_url = tabun.upload_image_link(path + picture['representations']['full'], parse_link=True)
             except tabun_api.TabunError as e:
                 print('Tabun upload error:', e)
-                sys.exit(5)
+                cont = input('Retry? [y/N]: ')
+                if cont.lower() != 'y':
+                    continue
+                print('Falling back to uploading large instead of full.')
+                while True:
+                    try:
+                        img_url = tabun.upload_image_link(path + picture['representations']['large'], parse_link=True)
+                    except tabun_api.TabunError as e:
+                        print('Tabun upload error:', e)
+                        cont = input('Retry? [y/N]: ')
+                        if cont.lower() != 'y':
+                            continue
+                        sys.exit(5)
+                    break
+            break
         if current_pic == 0:
             op_pic = tmpl_op_pic.replace('__PIC__', img_url).replace('__FULL__', img_link)
             op_pic = db_replace(op_pic, picture, mirror, defaults)
@@ -414,20 +429,31 @@ body = body.replace('___', str(pack_number))
 # Add a post!
 print('Adding a draft post:', title)
 if type(blog_id) == str:
+    while True:
+        try:
+            blog_id = tabun.get_blog(blog_id).blog_id
+        except tabun_api.TabunError as e:
+            print('Tabun blog search error:', e)
+            cont = input('Retry? [y/N]: ')
+            if cont.lower() != 'y':
+                continue
+            sys.exit(9)
+        break
+        
+while True:
     try:
-        blog_id = tabun.get_blog(blog_id).blog_id
+        blog, post_id = tabun.add_post(blog_id, title, emoji.demojize(body), tags, forbid_comment=False, draft=True)
     except tabun_api.TabunError as e:
-        print('Tabun blog search error:', e)
-        sys.exit(9)
-try:
-    blog, post_id = tabun.add_post(blog_id, title, emoji.demojize(body), tags, forbid_comment=False, draft=True)
-except tabun_api.TabunError as e:
-    print('Tabun posting error:', e)
-    print('Saving the source to:', backup)
-    backupfile = Path(str(Path.home()) + '/' + backup)
-    backupfile.parent.mkdir(parents=True, exist_ok=True)
-    backupfile.write_text(emoji.demojize(body), encoding="utf-8", errors="xmlcharrefreplace")
-    sys.exit(10)
+        print('Tabun posting error:', e)
+        cont = input('Retry? [y/N]: ')
+        if cont.lower() != 'y':
+            continue
+        print('Saving the source to:', backup)
+        backupfile = Path(str(Path.home()) + '/' + backup)
+        backupfile.parent.mkdir(parents=True, exist_ok=True)
+        backupfile.write_text(emoji.demojize(body), encoding="utf-8", errors="xmlcharrefreplace")
+        sys.exit(10)
+    break
 
 print('New post added successfully! Link: https://tabun.everypony.ru/blog/' + str(post_id) + '.html')
 # If you forgot a link, you may find it here: https://tabun.everypony.ru/topic/saved/
