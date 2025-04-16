@@ -51,11 +51,11 @@ tmpl_text_spoiler_header_bonus = 'Бонус'
 tmpl_pic_spoiler_header = '<img src = "__PIC__" >'
 tmpl_pic_spoiler_header_bonus = '<img src = "__PIC__" >'
 tmpl_op_pic = """<a href="__PIC__" target="_blank">__FULL__</a>
-<a href="__DB_URL__" target="_blank">*</a> (__AUTHOR__)"""
+<a href="__DB_URL__" target="_blank">♫</a> (__AUTHOR__)"""
 tmpl_alttext = '__DESC__'
-tmpl_spoiler_contents = """№ <a href="__DB_URL__" target="_blank">___</a> (__AUTHOR__)
+tmpl_spoiler_contents = """♫ <a href="__DB_URL__" target="_blank">___</a> (__AUTHOR__)
 <a href="__PIC__" target="_blank">__FULL__</a>"""
-tmpl_spoiler_contents_bonus = """<a href="__DB_URL__" target="_blank">***</a> (__AUTHOR__)
+tmpl_spoiler_contents_bonus = """<a href="__DB_URL__" target="_blank">⊳⌾⊲</a> (__AUTHOR__)
 <a href="__PIC__" target="_blank">__FULL__</a>"""
 # Example: If you wish to link picture preview to derpibooru page
 # instead of pic fullsize, replace __PIC__ with __DB_URL__
@@ -93,7 +93,7 @@ bonuspic = '' # 'https://cdn.everypony.ru/storage/06/08/97/2020/11/24/21df10c0b9
 timezone = '+03:00' # Timezone for searching images on Derpibooru
 config = '.tabun-pack/number' # Where to store pack number (relative to '~')
 backup = '.tabun-pack/post_backup.txt' # Where to save post source if unable to post to tabun
-pick = '.tabun-pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry'
+pick = '.tabun-pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry', or '*:dpaste'
 period = 7 # How many days to get pics from
 offset = {'years': 1} # How long to offset the date from current day (None for no offset, supports 'years', 'months', 'days')
 pagelimit = 0 # Booru page limit (0 - download all pages, 1 - behave as before by loading only one page).
