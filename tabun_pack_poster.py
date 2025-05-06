@@ -334,13 +334,14 @@ if bonuspony != '':
 
 # Login to Tabun
 while True:
-    print('Logging in...')
     try:
+        print('Logging in...')
         tabun = tabun_api.User(login=username, passwd=password, proxy=proxy)
     except tabun_api.TabunResultError as e:
         print('Tabun login error:', e)
         cont = input('Retry? [y/N]: ')
-        if cont.lower() != 'y':
+        if cont.lower() == 'y':
+            print('Retrying...')
             continue
         sys.exit(4)
     break
@@ -360,27 +361,29 @@ def upload_pics(data, is_bonus):
         if len(desc) > 50:
             desc = desc[0:50] + '(...)'
         progress = 'OP picture  ' if current_pic == 0 else caption + ' [' + str(current_pic) + ']'
-        print('Uploading ' + progress + ' (' + mirror + api[apitype]['imgpath'] + str(picture['id']) + '):', desc)
         link_rep = picture['representations']['medium'] if current_pic == 0 else picture['representations']['large']
         path = mirror if api[apitype]['addpath'] else ''
         while True:
             try:
+                print('Uploading ' + progress + ' (' + mirror + api[apitype]['imgpath'] + str(picture['id']) + '):', desc)
                 alttext = db_replace(tmpl_alttext, picture, mirror, defaults)
                 img_link = tabun.upload_image_link(path + link_rep, title=alttext, parse_link=False)
                 img_url = tabun.upload_image_link(path + picture['representations']['full'], parse_link=True)
             except tabun_api.TabunError as e:
                 print('Tabun upload error:', e)
                 cont = input('Retry? [y/N]: ')
-                if cont.lower() != 'y':
+                if cont.lower() == 'y':
+                    print('Retrying...')
                     continue
-                print('Falling back to uploading large instead of full.')
                 while True:
                     try:
+                        print('Uploading large instead of full.')
                         img_url = tabun.upload_image_link(path + picture['representations']['large'], parse_link=True)
                     except tabun_api.TabunError as e:
                         print('Tabun upload error:', e)
                         cont = input('Retry? [y/N]: ')
-                        if cont.lower() != 'y':
+                        if cont.lower() == 'y':
+                            print('Retrying...')
                             continue
                         sys.exit(5)
                     break
@@ -427,26 +430,29 @@ title = title.replace('___', str(pack_number))
 body = body.replace('___', str(pack_number))
 
 # Add a post!
-print('Adding a draft post:', title)
 if type(blog_id) == str:
     while True:
         try:
+            print('Determining ID for blog', blog_id)
             blog_id = tabun.get_blog(blog_id).blog_id
         except tabun_api.TabunError as e:
             print('Tabun blog search error:', e)
             cont = input('Retry? [y/N]: ')
-            if cont.lower() != 'y':
+            if cont.lower() == 'y':
+                print('Retrying...')
                 continue
             sys.exit(9)
         break
         
 while True:
     try:
+        print('Adding a draft post:', title)
         blog, post_id = tabun.add_post(blog_id, title, emoji.demojize(body), tags, forbid_comment=False, draft=True)
     except tabun_api.TabunError as e:
         print('Tabun posting error:', e)
         cont = input('Retry? [y/N]: ')
-        if cont.lower() != 'y':
+        if cont.lower() == 'y':
+            print('Retrying...')
             continue
         print('Saving the source to:', backup)
         backupfile = Path(str(Path.home()) + '/' + backup)
