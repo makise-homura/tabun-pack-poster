@@ -344,6 +344,13 @@ while True:
             print('Retrying...')
             continue
         sys.exit(4)
+    except tabun_api.TabunError as e:
+        print('Tabun connection error:', e)
+        cont = input('Retry? [y/N]: ')
+        if cont.lower() == 'y':
+            print('Retrying...')
+            continue
+        sys.exit(4)
     break
 
 # Upload pictures and put links into a template body
