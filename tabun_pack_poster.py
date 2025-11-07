@@ -3,6 +3,7 @@
 ##############################################################################
 
 # Your tabun credentials
+tabun_host = 'https://tabun.everypony.ru'
 username = 'your username on tabun'
 password = 'your password on tabun'
 
@@ -156,7 +157,7 @@ except ImportError as e:
 while True:
     try:
         print('Logging in...')
-        tabun = tabun_api.User(login=username, passwd=password, proxy=proxy)
+        tabun = tabun_api.User(login=username, passwd=password, proxy=proxy, http_host=tabun_host)
     except tabun_api.TabunResultError as e:
         print('Tabun login error:', e)
         cont = input('Retry? [y/N]: ')
@@ -469,5 +470,5 @@ while True:
         sys.exit(10)
     break
 
-print('New post added successfully! Link: https://tabun.everypony.ru/blog/' + str(post_id) + '.html')
-# If you forgot a link, you may find it here: https://tabun.everypony.ru/topic/saved/
+print('New post added successfully! Link: ' + tabun_host + '/blog/' + str(post_id) + '.html')
+# If you forgot a link, you may find it here: https://tabun.everypony.ru/topic/saved/ (or on some other of tabun mirrors)
