@@ -1,109 +1,54 @@
 #!/usr/bin/env python3
 
-##############################################################################
-
-class cfg_class():
-
-    # Your tabun credentials
+class defcfg_class():
+    # Default values
     tabun_host = 'https://tabun.everypony.ru'
-    username = 'your username on tabun'
-    password = 'your password on tabun'
-
-    # Proxy. Set to '' (not None!) for direct connection.
+    username = ''
+    password = ''
     proxy = ''
-    # Or use something like 'http://user:passwd@httpsproxy.net:8080'
-
-    # Derpibooru mirror to use (or other booru, like https://www.twibooru.org or https://ponerpics.org)
     mirror = 'https://www.derpibooru.org'
-    apitype = 'derpibooru' # derpibooru, ponerpics, or twibooru
-
-    # Post properties (use three underscores to substitute pack number in title)
-    title = 'Пак имени лучшей музыкальной пони №___'
-    tags = ['Лира Хартстрингс', 'Лира', 'Lyra Heartstrings', 'Lyra', 'пак', 'картинки']
-    blog_id = 'Heartstrings' # integer ID or string from URL; 0 = your personal blog
-
-    # Tags to sort and search on Derpibooru
-    pony = 'lyra heartstrings'
-    bonuspony = 'bon-bon'
+    apitype = 'derpibooru'
+    title = 'Пак №___'
+    tags = ['пак', 'картинки']
+    blog_id = 0
+    pony = ''
+    bonuspony = ''
     also = 'safe, -webm, -exploitable meme, -meme, -irl, -comic, -screencap, -meta, -text only'
-    sort = 'wilson_score' # 'score' looks like not so suitable
-
-    # Post template (__OP_PIC__ and __PIC_BLOCK__ are placeholders)
-    # ___ will also be changed to pack number, as in title
+    sort = 'wilson_score'
     tmpl_body = """
-    Пришло время для ___-го пака имени Лиры Хартстрингс.
+    Пришло время для ___-го пака.
     __OP_PIC__
-    <cut name="Больше мятности и музыкальности! →">
+    <cut name="Картинки здесь →">
     __PIC_BLOCK__
-    Да пребудет с вами Лира!
     """
-
-    # Other templates
-    # Placeholders regognized:
-    # ___ : spoiler number (not in op_pic),
-    # __PIC__ : URL of spoilerpic/resized picture (not in text_spoiler_header_*)
-    # __FULL__ : <img> tag of full-resolution picture (not in *_spoiler_header)
-    # __DESC__ : Derpibooru picture description
-    # __NAME__ : Derpibooru picture name
-    # __AUTHOR__ : Derpibooru picture artist (or uploader, if no artist tag is given)
-    # __SOURCE__ : Derpibooru picture source URL
-    # __ID__ : Derpibooru picture ID
-    # __DB_URL__ : Derpibooru URL of picture page
     tmpl_text_spoiler_header = 'Спойлер ___'
     tmpl_text_spoiler_header_bonus = 'Бонус'
     tmpl_pic_spoiler_header = '<img src = "__PIC__" >'
     tmpl_pic_spoiler_header_bonus = '<img src = "__PIC__" >'
     tmpl_op_pic = """<a href="__PIC__" target="_blank">__FULL__</a>
-    <a href="__DB_URL__" target="_blank">♫</a> (__AUTHOR__)"""
+    <a href="__DB_URL__" target="_blank">#</a> (__AUTHOR__)"""
     tmpl_alttext = '__DESC__'
-    tmpl_spoiler_contents = """♫ <a href="__DB_URL__" target="_blank">___</a> (__AUTHOR__)
+    tmpl_spoiler_contents = """№ <a href="__DB_URL__" target="_blank">___</a> (__AUTHOR__)
     <a href="__PIC__" target="_blank">__FULL__</a>"""
-    tmpl_spoiler_contents_bonus = """<a href="__DB_URL__" target="_blank">⊳⌾⊲</a> (__AUTHOR__)
+    tmpl_spoiler_contents_bonus = """<a href="__DB_URL__" target="_blank">#</a> (__AUTHOR__)
     <a href="__PIC__" target="_blank">__FULL__</a>"""
-    # Example: If you wish to link picture preview to derpibooru page
-    # instead of pic fullsize, replace __PIC__ with __DB_URL__
-    # in tmpl_spoiler_contents, tmpl_spoiler_contents_bonus, and tmpl_op_pic.
+    defaults = { 'description':'', 'name':'Без названия', 'author':'неизвестный автор', 'source_url':'неизвестен' }
+    spoilerpics = []
+    bonuspic = ''
+    timezone = '+03:00'
+    config = '.tabun-pack/number'
+    backup = '.tabun-pack/post_backup.txt'
+    pick = '.tabun-pack/test.html'
+    period = 7
+    offset = None
+    pagelimit = 0
+    pressenter = False
 
-    # Default values for placeholders
-    defaults = {
-        'description':'',
-        'name':'Без названия',
-        'author':'неизвестный автор',
-        'source_url':'неизвестен',
-    }
-
-    # Pics for spoiler headers (like those you see in Celestia and Luna packs):
-    # use None or empty array for generic text spoilers
-    # or an array of tabun-hosted pics URLs, like this:
-    spoilerpics = [
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/a784622ba4.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/8c7b62a1e9.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/51a0ceb200.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/1451bf0db5.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/27f426ebe2.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/cbf5de99a4.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/c26d9e76e1.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/a198701934.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/de350c0e28.png',
-    #    'https://cdn.everypony.ru/storage/06/08/97/2020/11/16/72f506e5df.png',
-    ]
-    # If less items than requested, remaining spoilers will be text ones
-
-    # Pic for bonus block (None or '' for no picture)
-    bonuspic = '' # 'https://cdn.everypony.ru/storage/06/08/97/2020/11/24/21df10c0b9.png'
-
-    # Other config
-    timezone = '+03:00' # Timezone for searching images on Derpibooru
-    config = '.tabun-pack/number' # Where to store pack number (relative to '~')
-    backup = '.tabun-pack/post_backup.txt' # Where to save post source if unable to post to tabun
-    pick = '.tabun-pack/test.html' # Where to create cherry-pick html (relative to '~'), or '*:rentry', or '*:dpaste'
-    period = 7 # How many days to get pics from
-    offset = {'years': 1} # How long to offset the date from current day (None for no offset, supports 'years', 'months', 'days')
-    pagelimit = 0 # Booru page limit (0 - download all pages, 1 - behave as before by loading only one page).
-    pressenter = False # Whether to ask to press ENTER on exit (either successful or by failure)
-
-cfg = cfg_class()
-##############################################################################
+if __name__ == "main":
+    from config import cfg_class
+    cfg = cfg_class()
+else:
+    cfg = defcfg_class()
 
 import sys
 import time
