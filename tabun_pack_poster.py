@@ -152,6 +152,42 @@ except ImportError as e:
     print('Install Tabun API: pip install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]')
     sys.exit(1)
 
+# Login to Tabun
+while True:
+    try:
+        print('Logging in...')
+        tabun = tabun_api.User(login=username, passwd=password, proxy=proxy)
+    except tabun_api.TabunResultError as e:
+        print('Tabun login error:', e)
+        cont = input('Retry? [y/N]: ')
+        if cont.lower() == 'y':
+            print('Retrying...')
+            continue
+        sys.exit(4)
+    except tabun_api.TabunError as e:
+        print('Tabun connection error:', e)
+        cont = input('Retry? [y/N]: ')
+        if cont.lower() == 'y':
+            print('Retrying...')
+            continue
+        sys.exit(4)
+    break
+
+# Check if the blog exists (and find ID for it)
+if type(blog_id) == str:
+    while True:
+        try:
+            print('Determining ID for blog', blog_id)
+            blog_id = tabun.get_blog(blog_id).blog_id
+        except tabun_api.TabunError as e:
+            print('Tabun blog search error:', e)
+            cont = input('Retry? [y/N]: ')
+            if cont.lower() == 'y':
+                print('Retrying...')
+                continue
+            sys.exit(9)
+        break
+
 api = {
     'derpibooru': {'path': '/api/v1/json/search/images', 'jsonarray': 'images', 'jsontotal': 'total', 'jsonname': 'name',      'imgpath': '/images/', 'addpath': False },
     'ponerpics':  {'path': '/api/v1/json/search/images', 'jsonarray': 'images', 'jsontotal': 'total', 'jsonname': 'name',      'imgpath': '/images/', 'addpath': True  },
@@ -332,27 +368,6 @@ if bonuspony != '':
     if data_bonus == []:
         bonuspony = ''
 
-# Login to Tabun
-while True:
-    try:
-        print('Logging in...')
-        tabun = tabun_api.User(login=username, passwd=password, proxy=proxy)
-    except tabun_api.TabunResultError as e:
-        print('Tabun login error:', e)
-        cont = input('Retry? [y/N]: ')
-        if cont.lower() == 'y':
-            print('Retrying...')
-            continue
-        sys.exit(4)
-    except tabun_api.TabunError as e:
-        print('Tabun connection error:', e)
-        cont = input('Retry? [y/N]: ')
-        if cont.lower() == 'y':
-            print('Retrying...')
-            continue
-        sys.exit(4)
-    break
-
 # Upload pictures and put links into a template body
 def upload_pics(data, is_bonus):
     if is_bonus:
@@ -437,20 +452,6 @@ title = title.replace('___', str(pack_number))
 body = body.replace('___', str(pack_number))
 
 # Add a post!
-if type(blog_id) == str:
-    while True:
-        try:
-            print('Determining ID for blog', blog_id)
-            blog_id = tabun.get_blog(blog_id).blog_id
-        except tabun_api.TabunError as e:
-            print('Tabun blog search error:', e)
-            cont = input('Retry? [y/N]: ')
-            if cont.lower() == 'y':
-                print('Retrying...')
-                continue
-            sys.exit(9)
-        break
-        
 while True:
     try:
         print('Adding a draft post:', title)
