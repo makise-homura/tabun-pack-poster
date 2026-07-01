@@ -15,7 +15,9 @@ class cfg_class(defcfg_class):
     ### Or manually specify a proxy for each resource accessed by this script, for example:
     # proxy = {
     #     'tabun':  'socks5://localhost:10808',
-    #     'booru':  'http://proxy.example.org:3128'
+    #     'booru':  'http://proxy.example.org:3128',
+    #     'dpaste':  None,
+    #     'rentry': ''
     # }
 
     ### Derpibooru mirror to use (or other booru, like https://www.twibooru.org or https://ponerpics.org)

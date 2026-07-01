@@ -65,18 +65,15 @@ else:
     from dateutil.relativedelta import relativedelta
 
     if not type(cfg.proxy) is dict:
-        cfg.proxy = {
-            'tabun':  cfg.proxy,
-            'booru':  cfg.proxy
-        }
+        cfg.proxy = dict.fromkeys(['tabun', 'booru', 'rentry', 'dpaste'], cfg.proxy)
 
     # Urllib client for rentry
     class UrllibClient:
         """Simple HTTP Session Client, keeps cookies."""
 
-        def __init__(self):
+        def __init__(self, proxies=None):
             self.cookie_jar = http.cookiejar.CookieJar()
-            self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookie_jar))
+            self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookie_jar), urllib.request.ProxyHandler(proxies))
             urllib.request.install_opener(self.opener)
 
         def get(self, url, headers={}):
@@ -263,7 +260,8 @@ else:
         return pickfile.as_uri()
 
     def upload_rentry(data):
-        client, cookie = UrllibClient(), SimpleCookie()
+        r_proxies = None if cfg.proxy['rentry'] == None else {} if cfg.proxy['rentry'] == '' else {'https': cfg.proxy['rentry']}
+        client, cookie = UrllibClient(r_proxies), SimpleCookie()
         cookie.load(vars(client.get('https://rentry.co'))['headers']['Set-Cookie'])
         csrftoken = cookie['csrftoken'].value
         payload = {'csrfmiddlewaretoken': csrftoken, 'url': '', 'edit_code': '', 'text': data}
@@ -275,8 +273,9 @@ else:
     def upload_dpaste(data):
         r_data = {"content": data, "syntax": "md", "expiry_days": 1}
         r_headers = {"User-Agent": "Tabun Pack Poster"}
+        r_proxies = None if cfg.proxy['dpaste'] == None else {'https': cfg.proxy['dpaste']}
         try:
-            r = requests.post("https://dpaste.com/api/", data=r_data, headers=r_headers)
+            r = requests.post("https://dpaste.com/api/", data=r_data, headers=r_headers, proxies=r_proxies)
             if r.status_code == 201:
                 return r.text.rstrip() + '-preview'
             else:
