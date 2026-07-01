@@ -10,7 +10,13 @@ class cfg_class(defcfg_class):
 
     ### Proxy. Set to '' (not None!) for direct connection.
     # proxy = ''
-    ### Or use something like 'http://user:passwd@httpsproxy.net:8080'
+    ### Or specify something like this to use the same proxy for all connections:
+    # proxy = 'http://user:passwd@httpsproxy.net:8080'
+    ### Or manually specify a proxy for each resource accessed by this script:
+    # proxy = {
+    #     'tabun':  'socks5://localhost:10808',
+    #     'booru':  'http://proxy.example.org:3128'
+    # }
 
     ### Derpibooru mirror to use (or other booru, like https://www.twibooru.org or https://ponerpics.org)
     # mirror = 'https://www.derpibooru.org'

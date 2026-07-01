@@ -64,6 +64,12 @@ else:
     from http.cookies import SimpleCookie
     from dateutil.relativedelta import relativedelta
 
+    if not type(cfg.proxy) is dict:
+        cfg.proxy = {
+            'tabun':  cfg.proxy,
+            'booru':  cfg.proxy
+        }
+
     # Urllib client for rentry
     class UrllibClient:
         """Simple HTTP Session Client, keeps cookies."""
@@ -105,7 +111,7 @@ else:
     while True:
         try:
             print('Logging in...')
-            tabun = tabun_api.User(login=cfg.username, passwd=cfg.password, proxy=cfg.proxy, http_host=cfg.tabun_host)
+            tabun = tabun_api.User(login=cfg.username, passwd=cfg.password, proxy=cfg.proxy['tabun'], http_host=cfg.tabun_host)
         except tabun_api.TabunResultError as e:
             print('Tabun login error:', e)
             cont = input('Retry? [y/N]: ')
@@ -181,7 +187,7 @@ else:
         if also_fixed[0] != ',':
             also_fixed = ', ' + also_fixed
         dbtags = ponytags + also_fixed + datetags
-        proxies = {} if cfg.proxy == '' else {'https': cfg.proxy}
+        proxies = {} if cfg.proxy['booru'] == '' else {'https': cfg.proxy['booru']}
         print('Retrieving from', cfg.mirror, 'by tags:', dbtags)
         while cfg.pagelimit == 0 or page <= cfg.pagelimit:
             print('Downloading page:', page)
