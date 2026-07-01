@@ -11,7 +11,7 @@ class cfg_class(defcfg_class):
     ### Proxy. Set to '' (not None!) for direct connection.
     # proxy = ''
     ### Or set to a proxy string of the following format to use the same proxy for all connections:
-    # proxy = '{http|socks5|socks5h}://[user[:passwd]@]hostname:port'
+    # proxy = 'scheme://[user[:passwd]@]hostname:port'
     ### Or manually specify a proxy for each resource accessed by this script, for example:
     # proxy = {
     #     'tabun':  'socks5://localhost:10808',
@@ -19,6 +19,7 @@ class cfg_class(defcfg_class):
     #     'dpaste':  None,
     #     'rentry': ''
     # }
+    ### (Note: 'socks5h' scheme is supported now for 'dpaste' and 'booru' only; for 'tabun' and 'rentry' use 'socks5').
 
     ### Derpibooru mirror to use (or other booru, like https://www.twibooru.org or https://ponerpics.org)
     # mirror = 'https://www.derpibooru.org'
