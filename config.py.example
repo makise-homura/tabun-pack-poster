@@ -10,9 +10,9 @@ class cfg_class(defcfg_class):
 
     ### Proxy. Set to '' (not None!) for direct connection.
     # proxy = ''
-    ### Or specify something like this to use the same proxy for all connections:
-    # proxy = 'http://user:passwd@httpsproxy.net:8080'
-    ### Or manually specify a proxy for each resource accessed by this script:
+    ### Or set to a proxy string of the following format to use the same proxy for all connections:
+    # proxy = '{http|socks5|socks5h}://[user[:passwd]@]hostname:port'
+    ### Or manually specify a proxy for each resource accessed by this script, for example:
     # proxy = {
     #     'tabun':  'socks5://localhost:10808',
     #     'booru':  'http://proxy.example.org:3128'

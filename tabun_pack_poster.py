@@ -5,7 +5,7 @@ class defcfg_class():
     tabun_host = 'https://tabun.everypony.ru'
     username = ''
     password = ''
-    proxy = ''
+    proxy = None
     mirror = 'https://www.derpibooru.org'
     apitype = 'derpibooru'
     title = 'Пак №___'
@@ -187,7 +187,7 @@ else:
         if also_fixed[0] != ',':
             also_fixed = ', ' + also_fixed
         dbtags = ponytags + also_fixed + datetags
-        proxies = {} if cfg.proxy['booru'] == '' else {'https': cfg.proxy['booru']}
+        proxies = None if cfg.proxy['booru'] == None else {'https': cfg.proxy['booru']}
         print('Retrieving from', cfg.mirror, 'by tags:', dbtags)
         while cfg.pagelimit == 0 or page <= cfg.pagelimit:
             print('Downloading page:', page)
