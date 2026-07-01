@@ -22,7 +22,7 @@ pip3 install git+https://github.com/andreymal/tabun_api.git#egg=tabun_api[full]
 * [ ] `tabun_host` — используемое зеркало табуна.
 * [x] `username` — логин на табуне.
 * [x] `password` — пароль от табуна.
-* [ ] `proxy` — `None` (использовать системный прокси), пустая строка (подключаться без прокси) или строка прокси вида `scheme://[user[:pass]@]host:port`. Можно задать словарём с ключами `'tabun'` `'booru'`, `'dpaste'` и `'rentry'` отдельно прокси для табуна, буры и остальных ресурсов.
+* [ ] `proxy` — `None` (использовать системный прокси), пустая строка (подключаться без прокси) или строка прокси вида `scheme://[user[:pass]@]host:port`. Можно задать словарём с ключами `'tabun'`, `'booru'`, `'dpaste'` и `'rentry'` отдельно прокси для табуна, буры и остальных ресурсов. Поддерживаются схемы `http://` и `socks5://`, для `'booru'` и `'dpaste'` также `socks5h://`.
 * [ ] `mirror` — адрес буры.
 * [ ] `apitype` — вариант API сайта: `derpibooru` (для [Derpibooru](https://www.derpibooru.org) и [Trixiebooru](https://www.trixiebooru.org)), `ponerpics` (для [Ponerpics](https://www.ponerpics.org) и [Ponybooru](https://www.ponybooru.org)) или `twibooru` (для [Twibooru](https://www.twibooru.org)).
 * [ ] `title` — название поста, в нём на место `___` (три подчёркивания) подставится номер пака (начинается с 1 и дальше увеличивается).
