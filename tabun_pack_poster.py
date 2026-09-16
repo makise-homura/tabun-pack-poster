@@ -54,7 +54,6 @@ else:
     import time
     import datetime
     import json
-    import requests
     import emoji
     import atexit
     from pathlib import Path
@@ -184,24 +183,25 @@ else:
         if also_fixed[0] != ',':
             also_fixed = ', ' + also_fixed
         dbtags = ponytags + also_fixed + datetags
-        proxies = None if cfg.proxy['booru'] == None else {'https': cfg.proxy['booru']}
+        proxies = None if cfg.proxy['booru'] == None else {} if cfg.proxy['booru'] == '' else {'https': cfg.proxy['booru']}
         print('Retrieving from', cfg.mirror, 'by tags:', dbtags)
         while cfg.pagelimit == 0 or page <= cfg.pagelimit:
             print('Downloading page:', page)
-            params = [('sf', cfg.sort), ('per_page', limit), ('page', page), ('q', dbtags)]
+            params = urllib.parse.urlencode({'sf': cfg.sort, 'per_page': limit, 'page': page, 'q': dbtags})
             try:
+                client = UrllibClient(proxies)
                 while True:
-                    response = requests.get(cfg.mirror + api[cfg.apitype]['path'], params=params, proxies=proxies)
+                    response = client.get(cfg.mirror + api[cfg.apitype]['path'] + '?' + params, headers={'User-Agent': 'Tabun Pack Poster'})
                     if not response.status_code == 429:
                         break
                     print('Server requested us to wait a bit...')
                     time.sleep(10)
-            except requests.exceptions.RequestException as e:
-                print('HTTPS request error:', e)
+            except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                print('HTTPS error:', e)
                 sys.exit(2)
             try:
-                jsonpart = response.json();
-            except requests.exceptions.JSONDecodeError as e:
+                jsonpart = json.loads(response.data);
+            except json.JSONDecodeError as e:
                 print('JSON decode error:', e)
                 sys.exit(3)
             retrieved += len(jsonpart[api[cfg.apitype]['jsonarray']])
@@ -261,32 +261,33 @@ else:
 
     def upload_rentry(data):
         r_proxies = None if cfg.proxy['rentry'] == None else {} if cfg.proxy['rentry'] == '' else {'https': cfg.proxy['rentry']}
-        client, cookie = UrllibClient(r_proxies), SimpleCookie()
-        cookie.load(vars(client.get('https://rentry.co'))['headers']['Set-Cookie'])
-        csrftoken = cookie['csrftoken'].value
-        payload = {'csrfmiddlewaretoken': csrftoken, 'url': '', 'edit_code': '', 'text': data}
-        response = json.loads(client.post('https://rentry.co/api/new', payload, headers={"Referer": 'https://rentry.co'}).data)
-        if response['status'] == '200': return response['url']
-        print('Upload error: {}'.format(response['content']))
-        sys.exit(32)
+        try:
+            client, cookie = UrllibClient(r_proxies), SimpleCookie()
+            cookie.load(vars(client.get('https://rentry.co'))['headers']['Set-Cookie'])
+            csrftoken = cookie['csrftoken'].value
+            payload = {'csrfmiddlewaretoken': csrftoken, 'url': '', 'edit_code': '', 'text': data}
+            response = json.loads(client.post('https://rentry.co/api/new', payload, headers={'Referer': 'https://rentry.co'}).data)
+            if response['status'] == '200':
+                return response['url']
+            else:
+                print('Upload error: {}'.format(response['content']))
+                sys.exit(32)
+        except (urllib.error.HTTPError, urllib.error.URLError) as e:
+            print('Upload error: ', e)
+            sys.exit(32)
 
     def upload_dpaste(data):
-        r_data = {"content": data, "syntax": "md", "expiry_days": 1}
-        r_headers = {"User-Agent": "Tabun Pack Poster"}
-        r_proxies = None if cfg.proxy['dpaste'] == None else {'https': cfg.proxy['dpaste']}
+        r_proxies = None if cfg.proxy['dpaste'] == None else {} if cfg.proxy['dpaste'] == '' else {'https': cfg.proxy['dpaste']}
         try:
-            r = requests.post("https://dpaste.com/api/", data=r_data, headers=r_headers, proxies=r_proxies)
-            if r.status_code == 201:
-                return r.text.rstrip() + '-preview'
+            client = UrllibClient(r_proxies)
+            payload = {'content': data, 'syntax': 'md', 'expiry_days': 1}
+            response = client.post('https://dpaste.com/api/v2/', payload, headers={'User-Agent': 'Tabun Pack Poster'})
+            if response.status_code == 201:
+                return response.data.rstrip() + '-preview'
             else:
-                try:
-                    j = r.json();
-                    print('Can not upload to dpaste:', j['errors'])
-                    sys.exit(32)
-                except json.JSONDecodeError:
-                    print('Can not upload to dpaste, but no valid error JSON. Response got:', r.text)
-                    sys.exit(32)
-        except requests.exceptions.RequestException as e:
+                print('Can not upload to dpaste:', response.data)
+                sys.exit(32)
+        except (urllib.error.HTTPError, urllib.error.URLError) as e:
             print('Upload error: ', e)
             sys.exit(32)
 
